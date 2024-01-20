@@ -1,0 +1,4 @@
+
+foreign "obj/insight.a"
+foreign server_main(*ubyte) *ubyte
+
