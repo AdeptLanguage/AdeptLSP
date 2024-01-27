@@ -8,20 +8,57 @@ import "lsp.adept"
 import "log.adept"
 
 func main {
+    adeptls\running bool = true
+
     initializeLogging()
+
+    while adeptls\running {
+        message *Message = lsp\readMessage()
+        defer del(message)
+
+        log("Processing Message:\n")
+        log(message.toString())
+        log("\n")
+
+        if message.method == "initialize" {
+            initialize(message.id)
+        }
+    }
+
+    /*
     log("adeptls started!\n")
     readClientInitialzation()
     log("client initialization request received!\n")
     sendServerInitialization()
     log("(the rest is unimplemented)\n")
     waitForClientInitialized()
+    */
+
     finalizeLogging()
 }
 
-func readClientInitialzation() {
-    log("waiting for client initialization...\n")
-    message JSON = lsp\readMessage()
-    log(message.toString())
+func initialize(id JSON) {
+    log("Message is initialization request\n")
+
+    // TODO: Send back response that says we are initialized
+
+    capabilities <<String, JSON> AsymmetricPair> InitializerList
+
+    response JSON = JSON({
+        AsymmetricPair("jsonrpc", JSON("2.0")),
+        AsymmetricPair("id", id),
+        AsymmetricPair("capabilities", JSON(capabilities)),
+        AsymmetricPair("serverInfo", JSON({
+            AsymmetricPair("name", JSON("adeptls")),
+            AsymmetricPair("version", JSON("2.8")),
+        })),
+    })
+
+    log(toString(response))
+
+    lsp\writeMessage(response)
+
+    log("Sent back initialization reponse\n")
 }
 
 func sendServerInitialization() {

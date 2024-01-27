@@ -2,10 +2,31 @@
 import JSON
 import "headers.adept"
 
-struct Server ()
+struct Message (method String, id JSON) {
+    func toString String {
+        return sprintf("method=%S, id=%S", this.method, this.getIDString())
+    }
 
-func lsp\readMessage() JSON {
-    return readJSON()
+    func getIDString String {
+        number <double> Optional = this.id.number()
+
+        if number.has {
+            return toString(number.get() as long)
+        }
+
+        return toString(this.id)
+    }
+}
+
+func lsp\readMessage() *Message {
+    message *Message = new Message
+
+    json JSON = readJSON()
+
+    message.id = json.field("id").clone()
+    message.method = json.field("method").string().orElse("").toOwned()
+
+    return message
 }
 
 func readJSON() JSON {
