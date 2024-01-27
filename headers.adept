@@ -1,0 +1,34 @@
+
+import List
+import string_util
+
+CONTENT_LENGTH_PREFIX String = "Content-Length: "
+
+record Headers (content_length usize)
+
+func readHeaders() Headers {
+    headers Headers
+    header_text String
+
+    until break {
+        until header_text.endsWith("\r\n") {
+            header_text.append(getchar() as ubyte)
+        }
+
+        // End of headers
+        if header_text == "\r\n" {
+            break
+        }
+
+        if header_text.startsWith(CONTENT_LENGTH_PREFIX) {
+            length_string String = header_text.range(CONTENT_LENGTH_PREFIX.length, header_text.length).trimmedView()
+            headers.content_length = length_string.toUlong() as usize
+        } else {
+            // Ignore other kinds of headers
+        }
+
+        header_text = ""
+    }
+
+    return headers
+}

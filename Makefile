@@ -35,6 +35,9 @@ $(INSIGHT): out-directories $(C_OBJECTS)
 $(C_OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $< -o $@
 
+run: release
+	./adept-lsp
+
 clean:
 ifeq ($(OS), Windows_NT)
 	rmdir /s /q obj/

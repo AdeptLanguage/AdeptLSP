@@ -1,0 +1,36 @@
+
+import JSON
+import "headers.adept"
+
+struct Server ()
+
+func lsp\readMessage() JSON {
+    json JSON = readJSON()
+
+    print(json)
+
+    return JSON\null()
+}
+
+func readJSON() JSON {
+    headers Headers = readHeaders()
+
+    capacity usize = headers.content_length + 1
+    buffer *ubyte = new ubyte * capacity
+
+    num_read usize = fread(buffer, 1, headers.content_length, stdin)
+
+    if num_read != headers.content_length {
+        fprintf(stderr, "Error: num_read != headers.content_length\n")
+        abort()
+    }
+
+    json_text String = String(buffer, num_read, capacity, ::GIVEN)
+    return JSONFromString(json_text)
+}
+
+func lsp\writeMessage(json JSON) {
+    content String = json.toString()
+    printf("Content-Length: %d\r\n\r\n%S", content.length, content)
+    fflush(stdout)
+}

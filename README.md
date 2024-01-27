@@ -6,7 +6,7 @@ Adept Language Server
 make
 ```
 
-And then the result is `./adept-lsp`
+And then the result is `./adeptls`
 
 Since this LSP relies on C code, a `Makefile` is provided.
 
