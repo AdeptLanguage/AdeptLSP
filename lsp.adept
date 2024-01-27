@@ -5,11 +5,7 @@ import "headers.adept"
 struct Server ()
 
 func lsp\readMessage() JSON {
-    json JSON = readJSON()
-
-    print(json)
-
-    return JSON\null()
+    return readJSON()
 }
 
 func readJSON() JSON {

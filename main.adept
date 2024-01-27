@@ -5,15 +5,23 @@ pragma project_name 'adeptls'
 import basics
 import "insight.adept"
 import "lsp.adept"
+import "log.adept"
 
 func main {
+    initializeLogging()
+    log("adeptls started!\n")
     readClientInitialzation()
+    log("client initialization request received!\n")
     sendServerInitialization()
+    log("(the rest is unimplemented)\n")
     waitForClientInitialized()
+    finalizeLogging()
 }
 
 func readClientInitialzation() {
-    lsp\readMessage()
+    log("waiting for client initialization...\n")
+    message JSON = lsp\readMessage()
+    log(message.toString())
 }
 
 func sendServerInitialization() {
