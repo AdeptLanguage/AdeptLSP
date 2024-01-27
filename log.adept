@@ -1,0 +1,36 @@
+
+import cstdio
+import terminal
+
+adeptls\log_filename *ubyte = '/tmp/adeptls.log'
+adeptls\log_file *FILE = null
+adeptls\enable_logging bool = true
+
+func initializeLogging(){
+    if adeptls\enable_logging {
+        adeptls\log_file = fopen(adeptls\log_filename, 'a')
+
+        if adeptls\log_file == null {
+            fprintf(stderr, "Failed to open logging file\n")
+            abort()
+        }
+    }
+}
+
+func finalizeLogging(){
+    if adeptls\log_file != null {
+        fclose(adeptls\log_file)
+        adeptls\log_file = null
+    }
+}
+
+func log(format String, args ...) {
+    if adeptls\log_file != null {
+        format_cstr *ubyte = format.cstr()
+        defer delete format_cstr
+
+        vsprintf(def result String, format, args)
+        fprintf(adeptls\log_file, result)
+        fflush(adeptls\log_file)
+    }
+}
