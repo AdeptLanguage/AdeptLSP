@@ -35,6 +35,8 @@ func main int {
             adeptls\did_shutdown = true
         } elif message.method == "exit" {
             adeptls\running = false
+        } elif message.method == "textDocument/hover" {
+            hover(message.id)
         }
     }
 
@@ -73,6 +75,18 @@ func shutdown(id JSON) {
         AsymmetricPair("jsonrpc", JSON("2.0")),
         AsymmetricPair("id", id),
         AsymmetricPair("result", JSON\null())
+    })
+
+    lsp\writeMessage(response)
+}
+
+func hover(id JSON) {
+    response JSON = JSON({
+        AsymmetricPair("jsonrpc", JSON("2.0")),
+        AsymmetricPair("id", id),
+        AsymmetricPair("result", JSON({
+            AsymmetricPair("contents", JSON("This is a hover completion!")),
+        }))
     })
 
     lsp\writeMessage(response)
