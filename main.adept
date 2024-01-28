@@ -7,10 +7,16 @@ import "insight.adept"
 import "lsp.adept"
 import "log.adept"
 
-func main {
+func main int {
     adeptls\running bool = true
+    adeptls\did_shutdown bool = false
 
+    log("Starting up adeptls!\n")
+
+    log("Initializing logging...\n")
     initializeLogging()
+
+    log("Waiting for initialization request...\n")
 
     while adeptls\running {
         message *Message = lsp\readMessage()
@@ -22,49 +28,52 @@ func main {
 
         if message.method == "initialize" {
             initialize(message.id)
+        } elif message.method == "initialized" {
+            initialized()
+        } elif message.method == "shutdown" {
+            shutdown(message.id)
+            adeptls\did_shutdown = true
+        } elif message.method == "exit" {
+            adeptls\running = false
         }
     }
 
-    /*
-    log("adeptls started!\n")
-    readClientInitialzation()
-    log("client initialization request received!\n")
-    sendServerInitialization()
-    log("(the rest is unimplemented)\n")
-    waitForClientInitialized()
-    */
+    log("Exiting!\n")
 
     finalizeLogging()
+    return adeptls\did_shutdown ? 0 : 1
 }
 
 func initialize(id JSON) {
-    log("Message is initialization request\n")
-
-    // TODO: Send back response that says we are initialized
-
-    capabilities <<String, JSON> AsymmetricPair> InitializerList
+    capabilities <<String, JSON> AsymmetricPair> InitializerList = {
+        AsymmetricPair("hoverProvider", JSON(true))
+    }
 
     response JSON = JSON({
         AsymmetricPair("jsonrpc", JSON("2.0")),
         AsymmetricPair("id", id),
-        AsymmetricPair("capabilities", JSON(capabilities)),
-        AsymmetricPair("serverInfo", JSON({
-            AsymmetricPair("name", JSON("adeptls")),
-            AsymmetricPair("version", JSON("2.8")),
-        })),
+        AsymmetricPair("result", JSON({
+            AsymmetricPair("capabilities", JSON(capabilities)),
+            AsymmetricPair("serverInfo", JSON({
+                AsymmetricPair("name", JSON("adeptls")),
+                AsymmetricPair("version", JSON("2.8"))
+            }))
+        }))
     })
 
-    log(toString(response))
+    lsp\writeMessage(response)
+}
+
+func initialized() {
+    log("Initialization successful!\n")
+}
+
+func shutdown(id JSON) {
+    response JSON = JSON({
+        AsymmetricPair("jsonrpc", JSON("2.0")),
+        AsymmetricPair("id", id),
+        AsymmetricPair("result", JSON\null())
+    })
 
     lsp\writeMessage(response)
-
-    log("Sent back initialization reponse\n")
-}
-
-func sendServerInitialization() {
-    // lsp\writeMessage(JSON\null())
-}
-
-func waitForClientInitialized() {
-
 }

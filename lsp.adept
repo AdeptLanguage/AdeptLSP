@@ -23,6 +23,8 @@ func lsp\readMessage() *Message {
 
     json JSON = readJSON()
 
+    log("[received] %S\n", toString(json))
+
     message.id = json.field("id").clone()
     message.method = json.field("method").string().orElse("").toOwned()
 
@@ -43,11 +45,14 @@ func readJSON() JSON {
     }
 
     json_text String = String(buffer, num_read, capacity, ::GIVEN)
+    log("[read] %S\n", json_text)
     return JSONFromString(json_text)
 }
 
 func lsp\writeMessage(json JSON) {
-    content String = json.toString()
+    content String = json.serialize()
+    log("[sending] %S\n", content)
+
     printf("Content-Length: %d\r\n\r\n%S", content.length, content)
     fflush(stdout)
 }
