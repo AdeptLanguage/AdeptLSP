@@ -4,27 +4,16 @@ import "headers.adept"
 
 struct Message (method String, id JSON) {
     func toString String {
-        return sprintf("method=%S, id=%S", this.method, this.getIDString())
-    }
-
-    func getIDString String {
-        number <double> Optional = this.id.number()
-
-        if number.has {
-            return toString(number.get() as long)
-        }
-
-        return toString(this.id)
+        return sprintf("method=%S, id=%S", this.method, this.id.toString())
     }
 }
 
 func lsp\readMessage() *Message {
-    message *Message = new Message
-
     json JSON = readJSON()
 
     log("[received] %S\n", toString(json))
 
+    message *Message = new Message
     message.id = json.field("id").clone()
     message.method = json.field("method").string().orElse("").toOwned()
 

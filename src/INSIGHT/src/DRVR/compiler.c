@@ -559,8 +559,6 @@ errorcode_t parse_arguments(compiler_t *compiler, object_t *object, int argc, ch
                     compiler_add_user_search_path(compiler, &arg[2], NULL);
                 }
             }
-            
-            #ifdef ENABLE_DEBUG_FEATURES //////////////////////////////////
             else if(streq(arg, "--stages")){
                 compiler->debug_traits |= COMPILER_DEBUG_STAGES;
             } else if(streq(arg, "--dump")){
@@ -572,9 +570,6 @@ errorcode_t parse_arguments(compiler_t *compiler, object_t *object, int argc, ch
             } else if(streq(arg, "--no-result")){
                 compiler->debug_traits |= COMPILER_DEBUG_NO_RESULT;
             }
-
-            #endif // ENABLE_DEBUG_FEATURES ///////////////////////////////
-
             else {
                 redprintf("Invalid argument: %s\n", arg);
                 return FAILURE;
@@ -710,7 +705,7 @@ void show_help(bool show_advanced_options){
     printf("     /▔▔\\\n");
     printf("    /    \\    \n");
     printf("   /      \\    \n");
-    printf("  /   /\\   \\        The Adept Compiler v%s - (c) 2016-2022 Isaac Shelton\n", ADEPT_VERSION_STRING);
+    printf("  /   /\\   \\        The Adept Compiler v%s - (c) 2016-2023 Isaac Shelton\n", ADEPT_VERSION_STRING);
     printf(" /   /\\__   \\\n");
     printf("/___/    \\___\\\n\n");
     terminal_set_color(TERMINAL_COLOR_DEFAULT);
@@ -794,7 +789,7 @@ void show_help(bool show_advanced_options){
     #endif // ENABLE_DEBUG_FEATURES
 }
 
-void show_how_to_ignore_unused_variables(){
+void show_how_to_ignore_unused_variables(void){
     blueprintf("Choose one or more options to ignore unused variables:\n");
     printf("  A.) prefix the variable with '_'              [single variable]\n");
     printf("  B.) add 'pragma ignore_unused' to your file   [entire project]\n");
