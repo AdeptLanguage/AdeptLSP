@@ -15,21 +15,28 @@ record Document (uri String, text_content String) {
 }
 
 struct Documents (documents <String, Document> LinearMap) {
-    func set(uri String, text_content POD String) {
+    func set(uri String, text_content String) {
         document *Document = this.documents.getPointer(uri)
 
         if document == null {
+            log("Creating document `%S`...\n", uri)
             element *<String, Document> AsymmetricPair = this.documents.elements.add()
             element.first = uri.clone()
             element.second = POD Document(uri.clone(), text_content.toOwned())
             return
         }
 
-        document.text_content = text_content
+        log("Updating document `%S`...\n", uri)
+        document.text_content = text_content.toOwned()
     }
 
     func remove(uri String) {
+        log("Removing document `%S`...\n", uri)
         this.documents.remove(uri)
+    }
+
+    func getPointer(uri String) *Document {
+        return this.documents.getPointer(uri)
     }
 }
 
@@ -44,9 +51,29 @@ func openDocument(message *Message) {
     adeptls\documents.set(uri.commit(), text_content.commit())
 }
 
+func changeDocument(message *Message) {
+    log("Processing textDocument\\didChange\n")
+    log("Stuff is %S\n", toString(message.params.field("textDocument")))
+
+    uri String = message.params.field("textDocument").field("uri").string().orElse("")
+    changes <<JSON> List> Optional = message.params.field("contentChanges").array()
+
+    if changes.has {
+        log("Has changes\n")
+        last *JSON = changes.get().last()
+
+        if last != null {
+            log("Has latest change\n")
+            text_content String = last.field("text").string().orElse("")
+            adeptls\documents.set(uri.commit(), text_content.commit())
+        }
+    }
+}
+
 func closeDocument(message *Message) {
     log("Processing textDocument\\didClose\n")
 
     uri String = message.params.field("textDocument").field("uri").string().orElse("")
     adeptls\documents.remove(uri.commit())
 }
+

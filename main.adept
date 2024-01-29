@@ -29,7 +29,7 @@ func main int {
         }
 
         log("Processing Message:\n")
-        log(message.toString())
+        log("%S\n", message.toString())
         log("\n")
 
         if message.method == "initialize" {
@@ -42,13 +42,13 @@ func main int {
         } elif message.method == "exit" {
             adeptls\running = false
         } elif message.method == "textDocument/hover" {
-            hover(message.id)
+            hover(message)
         } elif message.method == "textDocument/didOpen" {
             openDocument(message)
         } elif message.method == "textDocument/didClose" {
             closeDocument(message)
         } elif message.method == "textDocument/didChange" {
-            // changeDocument(message)
+            changeDocument(message)
         }
     }
 
@@ -98,12 +98,15 @@ func shutdown(id JSON) {
     lsp\writeMessage(response)
 }
 
-func hover(id JSON) {
-    hover_text String = adeptls\documents.documents.elements.getPointer(0).second.text_content
+func hover(message *Message) {
+    id JSON = message.id
+    uri String = message.params.field("textDocument").field("uri").string().orElse("")
+    document *Document = adeptls\documents.documents.getPointer(uri)
+    hover_text String = document != null ? document.text_content : ""
 
     response JSON = JSON({
         AsymmetricPair("jsonrpc", JSON("2.0")),
-        AsymmetricPair("id", id),
+        AsymmetricPair("id", id.toOwned()),
         AsymmetricPair("result", JSON({
             AsymmetricPair("contents", JSON(hover_text.commit())),
         }))

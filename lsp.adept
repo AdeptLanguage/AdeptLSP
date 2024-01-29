@@ -4,7 +4,7 @@ import "headers.adept"
 
 struct Message (method String, id JSON, params JSON) {
     func toString String {
-        return sprintf("method=%S, id=%S, params=%S", this.method, this.id.toString(), this.params.toString())
+        return sprintf("method=%S, id=%S, params=%S", this.method.reference(), this.id.toString(), this.params.toString())
     }
 }
 
