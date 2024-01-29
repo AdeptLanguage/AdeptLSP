@@ -2,39 +2,43 @@
 import JSON
 import "headers.adept"
 
-struct Message (method String, id JSON) {
+struct Message (method String, id JSON, params JSON) {
     func toString String {
-        return sprintf("method=%S, id=%S", this.method, this.id.toString())
+        return sprintf("method=%S, id=%S, params=%S", this.method, this.id.toString(), this.params.toString())
     }
 }
 
 func lsp\readMessage() *Message {
-    json JSON = readJSON()
-
+    json POD JSON = readJSON()
     log("[received] %S\n", toString(json))
 
     message *Message = new Message
-    message.id = json.field("id").clone()
+    message.id = json.field("id").toOwned()
     message.method = json.field("method").string().orElse("").toOwned()
-
+    message.params = json.field("params").toOwned()
     return message
 }
 
 func readJSON() JSON {
+    log("Reading message headers...\n")
     headers Headers = readHeaders()
 
     capacity usize = headers.content_length + 1
     buffer *ubyte = new ubyte * capacity
 
+    log("Reading message content...\n")
     num_read usize = fread(buffer, 1, headers.content_length, stdin)
 
     if num_read != headers.content_length {
+        log("Error: num_read != headers.content_length\n")
         fprintf(stderr, "Error: num_read != headers.content_length\n")
         abort()
     }
 
-    json_text String = String(buffer, num_read, capacity, ::GIVEN)
+    json_text String = POD String(buffer, num_read, capacity, ::OWN)
     log("[read] %S\n", json_text)
+
+    log("Parsing message content...\n")
     return JSONFromString(json_text)
 }
 

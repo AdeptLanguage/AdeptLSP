@@ -1,0 +1,52 @@
+
+import JSON
+import LinearMap
+
+record Document (uri String, text_content String) {
+    constructor(uri POD String, text_content POD String) {
+        this.uri = uri
+        this.text_content = text_content
+    }
+
+    func __assign__(other POD Document) {
+        this.uri = other.uri.toOwned()
+        this.text_content = other.text_content.toOwned()
+    }
+}
+
+struct Documents (documents <String, Document> LinearMap) {
+    func set(uri String, text_content POD String) {
+        document *Document = this.documents.getPointer(uri)
+
+        if document == null {
+            element *<String, Document> AsymmetricPair = this.documents.elements.add()
+            element.first = uri.clone()
+            element.second = POD Document(uri.clone(), text_content.toOwned())
+            return
+        }
+
+        document.text_content = text_content
+    }
+
+    func remove(uri String) {
+        this.documents.remove(uri)
+    }
+}
+
+adeptls\documents Documents
+
+func openDocument(message *Message) {
+    log("Processing textDocument\\didOpen\n")
+
+    uri String = message.params.field("textDocument").field("uri").string().orElse("")
+    text_content String = message.params.field("textDocument").field("text").string().orElse("")
+
+    adeptls\documents.set(uri.commit(), text_content.commit())
+}
+
+func closeDocument(message *Message) {
+    log("Processing textDocument\\didClose\n")
+
+    uri String = message.params.field("textDocument").field("uri").string().orElse("")
+    adeptls\documents.remove(uri.commit())
+}

@@ -24,10 +24,11 @@ func finalizeLogging(){
     }
 }
 
+pragma __builtin_warn_bad_printf_format
 func log(format String, args ...) {
     if adeptls\log_file != null {
         vsprintf(def result String, format, args)
-        fprintf(adeptls\log_file, result)
+        fwrite(result.array, 1, result.length, adeptls\log_file)
         fflush(adeptls\log_file)
     }
 }

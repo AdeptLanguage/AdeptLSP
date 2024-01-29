@@ -6,6 +6,7 @@ import basics
 import "insight.adept"
 import "lsp.adept"
 import "log.adept"
+import "document.adept"
 
 func main int {
     adeptls\running bool = true
@@ -19,8 +20,13 @@ func main int {
     log("Waiting for initialization request...\n")
 
     while adeptls\running {
+        log("Waiting for next message...\n")
         message *Message = lsp\readMessage()
-        defer del(message)
+
+        defer {
+            log("Disposing of message...\n")
+            del(message)
+        }
 
         log("Processing Message:\n")
         log(message.toString())
@@ -37,6 +43,12 @@ func main int {
             adeptls\running = false
         } elif message.method == "textDocument/hover" {
             hover(message.id)
+        } elif message.method == "textDocument/didOpen" {
+            openDocument(message)
+        } elif message.method == "textDocument/didClose" {
+            closeDocument(message)
+        } elif message.method == "textDocument/didChange" {
+            // changeDocument(message)
         }
     }
 
@@ -46,9 +58,15 @@ func main int {
     return adeptls\did_shutdown ? 0 : 1
 }
 
+define TEXT_DOCUMENT_SYNC_KIND_FULL = 1.0
+
 func initialize(id JSON) {
     capabilities <<String, JSON> AsymmetricPair> InitializerList = {
-        AsymmetricPair("hoverProvider", JSON(true))
+        AsymmetricPair("hoverProvider", JSON(true)),
+        AsymmetricPair("textDocumentSync", JSON({
+            AsymmetricPair("openClose", JSON(true)),
+            AsymmetricPair("change", JSON(TEXT_DOCUMENT_SYNC_KIND_FULL))
+        }))
     }
 
     response JSON = JSON({
@@ -81,11 +99,13 @@ func shutdown(id JSON) {
 }
 
 func hover(id JSON) {
+    hover_text String = adeptls\documents.documents.elements.getPointer(0).second.text_content
+
     response JSON = JSON({
         AsymmetricPair("jsonrpc", JSON("2.0")),
         AsymmetricPair("id", id),
         AsymmetricPair("result", JSON({
-            AsymmetricPair("contents", JSON("This is a hover completion!")),
+            AsymmetricPair("contents", JSON(hover_text.commit())),
         }))
     })
 
