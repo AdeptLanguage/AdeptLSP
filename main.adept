@@ -106,9 +106,12 @@ func hover(message *Message) {
 
     response JSON = JSON({
         AsymmetricPair("jsonrpc", JSON("2.0")),
-        AsymmetricPair("id", id.toOwned()),
+        AsymmetricPair("id", id),
         AsymmetricPair("result", JSON({
-            AsymmetricPair("contents", JSON(hover_text.commit())),
+            AsymmetricPair("contents", JSON({
+                AsymmetricPair("kind", JSON("plaintext")),
+                AsymmetricPair("value", JSON(hover_text.commit()))
+            }))
         }))
     })
 

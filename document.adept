@@ -53,7 +53,6 @@ func openDocument(message *Message) {
 
 func changeDocument(message *Message) {
     log("Processing textDocument\\didChange\n")
-    log("Stuff is %S\n", toString(message.params.field("textDocument")))
 
     uri String = message.params.field("textDocument").field("uri").string().orElse("")
     changes <<JSON> List> Optional = message.params.field("contentChanges").array()
