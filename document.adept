@@ -2,27 +2,32 @@
 import JSON
 import LinearMap
 
-record Document (uri String, text_content String) {
-    constructor(uri POD String, text_content POD String) {
+record Document (uri String, text_content String, ast JSON, identifierTokens <IdentifierToken> List) {
+    constructor(uri POD String, text_content POD String, ast POD JSON, identifierTokens POD <IdentifierToken> List) {
         this.uri = uri
         this.text_content = text_content
+        this.ast = ast
+        this.identifierTokens = identifierTokens
     }
 
     func __assign__(other POD Document) {
         this.uri = other.uri.toOwned()
         this.text_content = other.text_content.toOwned()
+        this.ast = other.ast.toOwned()
+        this.identifierTokens = other.identifierTokens.clone()
     }
 }
 
 struct Documents (documents <String, Document> LinearMap) {
     func set(uri String, text_content String) {
         document *Document = this.documents.getPointer(uri)
+        identifierTokens <IdentifierToken> List
 
         if document == null {
             log("Creating document `%S`...\n", uri)
             element *<String, Document> AsymmetricPair = this.documents.elements.add()
             element.first = uri.clone()
-            element.second = POD Document(uri.clone(), text_content.toOwned())
+            element.second = POD Document(uri.toOwned(), text_content.toOwned(), JSON\undefined(), identifierTokens.toOwned())
             return
         }
 
@@ -49,6 +54,7 @@ func openDocument(message *Message) {
     text_content String = message.params.field("textDocument").field("text").string().orElse("")
 
     adeptls\documents.set(uri.commit(), text_content.commit())
+    update(uri)
 }
 
 func changeDocument(message *Message) {
@@ -64,7 +70,8 @@ func changeDocument(message *Message) {
         if last != null {
             log("Has latest change\n")
             text_content String = last.field("text").string().orElse("")
-            adeptls\documents.set(uri.commit(), text_content.commit())
+            adeptls\documents.set(uri, text_content.commit())
+            update(uri)
         }
     }
 }

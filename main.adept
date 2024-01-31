@@ -102,7 +102,15 @@ func hover(message *Message) {
     id JSON = message.id
     uri String = message.params.field("textDocument").field("uri").string().orElse("")
     document *Document = adeptls\documents.documents.getPointer(uri)
-    hover_text String = document != null ? document.text_content : ""
+
+    hover_text String
+    each IdentifierToken in static document.identifierTokens {
+        if hover_text.length != 0 {
+            hover_text.append("\n")
+        }
+
+        hover_text.append(it.content)
+    }
 
     response JSON = JSON({
         AsymmetricPair("jsonrpc", JSON("2.0")),
