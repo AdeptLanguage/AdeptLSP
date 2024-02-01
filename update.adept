@@ -1,0 +1,56 @@
+
+import basics
+
+adeptls\infrastructure String = "/Users/isaac/Projects/Adept/build/macOS-Release/"
+
+func update(uri String) {
+    log("Running update...\n")
+
+    document *Document = adeptls\documents.getPointer(uri)
+    if document == null, return
+
+    log("Has document...\n")
+
+    filename String = getFilenameFromURI(uri)
+
+    log("Running insight...\n")
+
+    response JSON = invokeInsight(JSON({
+        AsymmetricPair("query", JSON("ast")),
+        AsymmetricPair("infrastructure", JSON(adeptls\infrastructure.toOwned())),
+        AsymmetricPair("filename", JSON(filename.toOwned())),
+        AsymmetricPair("code", JSON(document.text_content.toOwned())),
+    }))
+
+    log("Got insight response...\n")
+
+    if response.kind() == ::STRING {
+        // Error occurred
+    }
+
+    ast JSON = response.field("ast")
+
+    if ast.kind() == ::OBJECT {
+        // Updated AST
+        document.ast = ast
+    }
+
+    identifierTokens <<JSON> List> Optional = response.field("identifierTokens").array()
+
+    if identifierTokens.has {
+        // Update identifier tokens
+        document.identifierTokens.clear()
+
+        each JSON in static identifierTokens.value {
+            *document.identifierTokens.add() = POD IdentifierToken(it)
+        }
+    }
+}
+
+func getFilenameFromURI(uri String) String {
+    if uri.startsWith("file://") {
+        return uri.segment(7, uri.length)
+    } else {
+        return uri.commit()
+    }
+}

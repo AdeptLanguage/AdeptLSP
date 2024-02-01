@@ -1,0 +1,28 @@
+
+import basics
+import JSON
+
+record Position (line, character usize) {
+    constructor(json JSON) {
+        this.line = json.field("line").number().orElse(0.0) as usize
+        this.character = json.field("character").number().orElse(0.0) as usize
+    }
+}
+
+record Range (start, end Position) {
+    constructor(json JSON) {
+        this.start = Position(json.field("start"))
+        this.end = Position(json.field("end"))
+    }
+}
+
+record IdentifierToken (content String, range Range) {
+    constructor(json JSON) {
+        this.content = json.field("content").string().orElse("").toOwned()
+        this.range = Range(json.field("range"))
+    }
+
+    func clone IdentifierToken {
+        return IdentifierToken(this.content.clone(), this.range)
+    }
+}

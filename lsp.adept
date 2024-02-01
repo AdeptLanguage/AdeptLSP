@@ -9,7 +9,7 @@ struct Message (method String, id JSON, params JSON) {
 }
 
 func lsp\readMessage() *Message {
-    json POD JSON = readJSON()
+    json JSON = readJSON()
     log("[received] %S\n", toString(json))
 
     message *Message = new Message

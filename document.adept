@@ -82,4 +82,3 @@ func closeDocument(message *Message) {
     uri String = message.params.field("textDocument").field("uri").string().orElse("")
     adeptls\documents.remove(uri.commit())
 }
-
