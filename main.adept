@@ -102,10 +102,18 @@ func shutdown(id JSON) {
 
 func hover(message *Message) {
     id JSON = message.id
-    uri String = message.params.field("textDocument").field("uri").string().orElse("")
+    text_document JSON = message.params.field("textDocument")
+    position JSON = message.params.field("position")
+
+    uri String = text_document.field("uri").string().orElse("")
+    line usize = position.field("line").number().orElse(0.0) as usize
+    character usize = position.field("character").number().orElse(0.0) as usize
+
     document *Document = adeptls\documents.documents.getPointer(uri)
 
     hover_text String
+    hover_text.append(sprintf("line=%d character=%d\n", line, character))
+    
     each IdentifierToken in static document.identifierTokens {
         if hover_text.length != 0 {
             hover_text.append("\n")
