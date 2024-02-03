@@ -9,6 +9,7 @@ import "log.adept"
 import "document.adept"
 import "update.adept"
 import "datatypes.adept"
+import "text.adept"
 
 func main int {
     adeptls\running bool = true
@@ -103,16 +104,13 @@ func shutdown(id JSON) {
 func hover(message *Message) {
     id JSON = message.id
     text_document JSON = message.params.field("textDocument")
-    position JSON = message.params.field("position")
-
+    position Position = Position(message.params.field("position"))
     uri String = text_document.field("uri").string().orElse("")
-    line usize = position.field("line").number().orElse(0.0) as usize
-    character usize = position.field("character").number().orElse(0.0) as usize
 
     document *Document = adeptls\documents.documents.getPointer(uri)
 
     hover_text String
-    hover_text.append(sprintf("line=%d character=%d\n", line, character))
+    hover_text.append(sprintf("line=%d character=%d index=%d\n", position.line, position.character, getTextIndex(document.text_content, position).orElse(0)))
     
     each IdentifierToken in static document.identifierTokens {
         if hover_text.length != 0 {

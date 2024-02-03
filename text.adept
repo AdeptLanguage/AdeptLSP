@@ -1,0 +1,21 @@
+
+func getTextIndex(text String, position Position) <usize> Optional {
+    line usize = 0
+    character usize = 0
+
+    for i usize = 0; i < text.length; i++ {
+        if line == position.line and character == position.character {
+            return some(i)
+        }
+
+        if text[i] == '\n'ub {
+            line++
+            character = 0
+        } else {
+            character++
+        }
+    }
+
+    return none() ~> <usize> Optional
+}
+
