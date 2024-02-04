@@ -9,10 +9,38 @@ record Position (line, character usize) {
     }
 }
 
+func __equals__(a, b Position) bool {
+    return a.line == b.line and a.character == b.character
+}
+
+func __not_equals__(a, b Position) bool {
+    return !__equals__(a, b)
+}
+
+func __less_than__(a, b Position) bool {
+    return a.line < b.line || (a.line == b.line and a.character < b.character)
+}
+
+func __less_than_or_equal__(a, b Position) bool {
+    return a.line < b.line || (a.line == b.line and a.character <= b.character)
+}
+
+func __greater_than__(a, b Position) bool {
+    return __less_than_or_equal__(b, a)
+}
+
+func __greater_than_or_equal__(a, b Position) bool {
+    return __less_than__(b, a)
+}
+
 record Range (start, end Position) {
     constructor(json JSON) {
         this.start = Position(json.field("start"))
         this.end = Position(json.field("end"))
+    }
+
+    func contains(position Position) bool {
+        return this.start <= position and position <= this.end
     }
 }
 

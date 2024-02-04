@@ -108,27 +108,32 @@ func hover(message *Message) {
     uri String = text_document.field("uri").string().orElse("")
 
     document *Document = adeptls\documents.documents.getPointer(uri)
-
     hover_text String
-    hover_text.append(sprintf("line=%d character=%d index=%d\n", position.line, position.character, getTextIndex(document.text_content, position).orElse(0)))
     
     each IdentifierToken in static document.identifierTokens {
-        if hover_text.length != 0 {
-            hover_text.append("\n")
+        if it.range.contains(position) {
+            hover_text.append(it.content)
+            break
         }
-
-        hover_text.append(it.content)
     }
 
-    response JSON = JSON({
-        AsymmetricPair("jsonrpc", JSON("2.0")),
-        AsymmetricPair("id", id),
-        AsymmetricPair("result", JSON({
+    result JSON
+
+    if hover_text == "" {
+        result = JSON\null()
+    } else {
+        result = JSON({
             AsymmetricPair("contents", JSON({
                 AsymmetricPair("kind", JSON("plaintext")),
                 AsymmetricPair("value", JSON(hover_text.commit()))
             }))
-        }))
+        })
+    }
+
+    response JSON = JSON({
+        AsymmetricPair("jsonrpc", JSON("2.0")),
+        AsymmetricPair("id", id.toOwned()),
+        AsymmetricPair("result", result.toOwned())
     })
 
     lsp\writeMessage(response)
