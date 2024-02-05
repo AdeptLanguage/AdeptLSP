@@ -112,7 +112,16 @@ func hover(message *Message) {
     
     each IdentifierToken in static document.identifierTokens {
         if it.range.contains(position) {
-            hover_text.append(it.content)
+            // Append function definitions that have the same name of the identifier being hovered
+            each function Function in static document.functions {
+                if function.name == it.content {
+                    if hover_text != "" {
+                        hover_text.append('\n'ub)
+                    }
+                    hover_text.append(function.definition)
+                }
+            }
+
             break
         }
     }

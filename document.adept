@@ -2,7 +2,13 @@
 import JSON
 import LinearMap
 
-record Document (uri String, text_content String, ast JSON, identifierTokens <IdentifierToken> List) {
+record Document (
+    uri String,
+    text_content String,
+    ast JSON,
+    identifierTokens <IdentifierToken> List,
+    functions <Function> List,
+) {
     constructor(uri POD String, text_content POD String, ast POD JSON, identifierTokens POD <IdentifierToken> List) {
         this.uri = uri
         this.text_content = text_content

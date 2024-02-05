@@ -45,6 +45,16 @@ func update(uri String) {
             *document.identifierTokens.add() = POD IdentifierToken(it)
         }
     }
+
+    functions <<JSON> List> Optional = ast.field("functions").array()
+
+    if functions.has {
+        document.functions.clear()
+
+        each JSON in static functions.value {
+            *document.functions.add() = POD Function(it)
+        }
+    }
 }
 
 func getFilenameFromURI(uri String) String {

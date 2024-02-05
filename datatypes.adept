@@ -54,3 +54,14 @@ record IdentifierToken (content String, range Range) {
         return IdentifierToken(this.content.clone(), this.range)
     }
 }
+
+record Function (name, definition String) {
+    constructor(json JSON) {
+        this.name = json.field("name").string().orElse("").toOwned()
+        this.definition = json.field("definition").string().orElse("").toOwned()
+    }
+
+    func clone Function {
+        return Function(this.name.clone(), this.definition.clone())
+    }
+}
