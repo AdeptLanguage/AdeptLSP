@@ -55,13 +55,62 @@ record IdentifierToken (content String, range Range) {
     }
 }
 
-record Function (name, definition String) {
+
+record Symbol (name, definition String) {
     constructor(json JSON) {
         this.name = json.field("name").string().orElse("").toOwned()
         this.definition = json.field("definition").string().orElse("").toOwned()
     }
 
-    func clone Function {
-        return Function(this.name.clone(), this.definition.clone())
+    func clone Symbol {
+        return Symbol(this.name.clone(), this.definition.clone())
     }
+}
+
+record Function (symbol Symbol) {
+    constructor(json JSON) {
+        this.symbol.__constructor__(json)
+    }
+
+    func clone Function = Function(this.symbol.clone())
+}
+
+record Composite (symbol Symbol) {
+    constructor(json JSON) {
+        this.symbol.__constructor__(json)
+    }
+
+    func clone Composite = Composite(this.symbol.clone())
+}
+
+record Alias (symbol Symbol) {
+    constructor(json JSON) {
+        this.symbol.__constructor__(json)
+    }
+
+    func clone Alias = Alias(this.symbol.clone())
+}
+
+record FunctionAlias (symbol Symbol) {
+    constructor(json JSON) {
+        this.symbol.__constructor__(json)
+    }
+
+    func clone FunctionAlias = FunctionAlias(this.symbol.clone())
+}
+
+record Enum (symbol Symbol) {
+    constructor(json JSON) {
+        this.symbol.__constructor__(json)
+    }
+
+    func clone Enum = Enum(this.symbol.clone())
+}
+
+record NamedExpression (symbol Symbol) {
+    constructor(json JSON) {
+        this.symbol.__constructor__(json)
+    }
+
+    func clone NamedExpression = NamedExpression(this.symbol.clone())
 }

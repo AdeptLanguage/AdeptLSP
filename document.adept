@@ -8,12 +8,16 @@ record Document (
     ast JSON,
     identifierTokens <IdentifierToken> List,
     functions <Function> List,
+    composites <Composite> List,
+    aliases <Alias> List,
+    function_aliases <FunctionAlias> List,
+    enums <Enum> List,
+    named_expressions <NamedExpression> List,
 ) {
-    constructor(uri POD String, text_content POD String, ast POD JSON, identifierTokens POD <IdentifierToken> List) {
+    constructor(uri POD String, text_content POD String, ast POD JSON) {
         this.uri = uri
         this.text_content = text_content
         this.ast = ast
-        this.identifierTokens = identifierTokens
     }
 
     func __assign__(other POD Document) {
@@ -21,19 +25,24 @@ record Document (
         this.text_content = other.text_content.toOwned()
         this.ast = other.ast.toOwned()
         this.identifierTokens = other.identifierTokens.clone()
+        this.functions = other.functions.clone()
+        this.composites = other.composites.clone()
+        this.aliases = other.aliases.clone()
+        this.function_aliases = other.function_aliases.clone()
+        this.enums = other.enums.clone()
+        this.named_expressions = other.named_expressions.clone()
     }
 }
 
 struct Documents (documents <String, Document> LinearMap) {
     func set(uri String, text_content String) {
         document *Document = this.documents.getPointer(uri)
-        identifierTokens <IdentifierToken> List
 
         if document == null {
             log("Creating document `%S`...\n", uri)
             element *<String, Document> AsymmetricPair = this.documents.elements.add()
             element.first = uri.clone()
-            element.second = POD Document(uri.toOwned(), text_content.toOwned(), JSON\undefined(), identifierTokens.toOwned())
+            element.second = POD Document(uri.toOwned(), text_content.toOwned(), JSON\undefined())
             return
         }
 

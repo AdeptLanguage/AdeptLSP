@@ -1,0 +1,34 @@
+
+adeptls\infrastructure String
+
+func parseArgs(argc int, argv **ubyte) successful {
+    for i usize = 1; i < argc; i++ {
+        argument StringView = StringView(argv[i])
+
+        if argument == "--help" {
+            log("Help Information ------------------------------------------------------------\n")
+            log("--help                                     Show Help\n")
+            log("--infrastructure <COMPILER_ROOT_FOLDER>    [REQUIRED] Compiler Infrastructure\n")
+            log("-----------------------------------------------------------------------------\n")
+        } else if argument == "--infrastructure" {
+            if i + 1 >= argc {
+                log("Missing <COMPILER_ROOT_FOLDER> value after `--infrastructure` flag\n")
+                return false
+            }
+
+            adeptls\infrastructure = StringView(argv[++i])
+        } else {
+            log("Unknown adeptls flag `%S`\n", argument)
+        }
+    }
+
+    if adeptls\infrastructure == "" {
+        log("Failed to start adeptls due to missing required `--infrastructure <COMPILER_ROOT_FOLDER>` option\n")
+        log("  Make sure to pass `--infrastructure <COMPILER_ROOT_FOLDER>` when starting adeptls\n")
+        log("  You can figure out your <COMPILER_ROOT_FOLDER> by running `adept --root`\n")
+        return false
+    }
+
+    return true
+}
+

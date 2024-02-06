@@ -1,8 +1,6 @@
 
 import basics
 
-adeptls\infrastructure String = "/Users/isaac/Projects/Adept/build/macOS-Release/"
-
 func update(uri String) {
     log("Running update...\n")
 
@@ -36,7 +34,6 @@ func update(uri String) {
     }
 
     identifierTokens <<JSON> List> Optional = response.field("identifierTokens").array()
-
     if identifierTokens.has {
         // Update identifier tokens
         document.identifierTokens.clear()
@@ -47,12 +44,56 @@ func update(uri String) {
     }
 
     functions <<JSON> List> Optional = ast.field("functions").array()
-
     if functions.has {
         document.functions.clear()
 
         each JSON in static functions.value {
             *document.functions.add() = POD Function(it)
+        }
+    }
+
+    composites <<JSON> List> Optional = ast.field("composites").array()
+    if composites.has {
+        document.composites.clear()
+
+        each JSON in static composites.value {
+            *document.composites.add() = POD Composite(it)
+        }
+    }
+
+    aliases <<JSON> List> Optional = ast.field("aliases").array()
+    if aliases.has {
+        document.aliases.clear()
+
+        each JSON in static aliases.value {
+            *document.aliases.add() = POD Alias(it)
+        }
+    }
+
+    function_aliases <<JSON> List> Optional = ast.field("function_aliases").array()
+    if function_aliases.has {
+        document.function_aliases.clear()
+
+        each JSON in static function_aliases.value {
+            *document.function_aliases.add() = POD FunctionAlias(it)
+        }
+    }
+
+    enums <<JSON> List> Optional = ast.field("enums").array()
+    if enums.has {
+        document.enums.clear()
+
+        each JSON in static enums.value {
+            *document.enums.add() = POD Enum(it)
+        }
+    }
+
+    named_expressions <<JSON> List> Optional = ast.field("namedExpressions").array()
+    if named_expressions.has {
+        document.named_expressions.clear()
+
+        each JSON in static named_expressions.value {
+            *document.named_expressions.add() = POD NamedExpression(it)
         }
     }
 }

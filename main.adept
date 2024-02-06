@@ -10,8 +10,9 @@ import "document.adept"
 import "update.adept"
 import "datatypes.adept"
 import "text.adept"
+import "args.adept"
 
-func main int {
+func main(argc int, argv **ubyte) int {
     adeptls\running bool = true
     adeptls\did_shutdown bool = false
 
@@ -19,6 +20,11 @@ func main int {
 
     log("Initializing logging...\n")
     initializeLogging()
+
+    log("Parsing arguments...\n")
+    unless parseArgs(argc, argv) {
+        return 1
+    }
 
     log("Waiting for initialization request...\n")
 
@@ -112,13 +118,62 @@ func hover(message *Message) {
     
     each IdentifierToken in static document.identifierTokens {
         if it.range.contains(position) {
-            // Append function definitions that have the same name of the identifier being hovered
+            // Append function definitions that have the same name as the identifier being hovered
             each function Function in static document.functions {
-                if function.name == it.content {
+                if function.symbol.name == it.content {
                     if hover_text != "" {
                         hover_text.append('\n'ub)
                     }
-                    hover_text.append(function.definition)
+                    hover_text.append(function.symbol.definition)
+                }
+            }
+
+            // Append composite definitions that have the same name as the identifier being hovered
+            each composite Composite in static document.composites {
+                if composite.symbol.name == it.content {
+                    if hover_text != "" {
+                        hover_text.append('\n'ub)
+                    }
+                    hover_text.append(composite.symbol.definition)
+                }
+            }
+
+            // Append alias definitions that have the same name as the identifier being hovered
+            each an_alias Alias in static document.aliases {
+                if an_alias.symbol.name == it.content {
+                    if hover_text != "" {
+                        hover_text.append('\n'ub)
+                    }
+                    hover_text.append(an_alias.symbol.definition)
+                }
+            }
+
+            // Append function alias definitions that have the same name as the identifier being hovered
+            each function_alias FunctionAlias in static document.function_aliases {
+                if function_alias.symbol.name == it.content {
+                    if hover_text != "" {
+                        hover_text.append('\n'ub)
+                    }
+                    hover_text.append(function_alias.symbol.definition)
+                }
+            }
+
+            // Append enum definitions that have the same name as the identifier being hovered
+            each an_enum Enum in static document.enums {
+                if an_enum.symbol.name == it.content {
+                    if hover_text != "" {
+                        hover_text.append('\n'ub)
+                    }
+                    hover_text.append(an_enum.symbol.definition)
+                }
+            }
+
+            each named_expression NamedExpression in static document.named_expressions {
+                if named_expression.symbol.name == it.content {
+                    if hover_text != "" {
+                        hover_text.append('\n'ub)
+                    }
+                    hover_text.append(named_expression.symbol.definition)
                 }
             }
 
