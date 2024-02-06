@@ -29,18 +29,18 @@ jobs:
       run: |
         curl -o Windows-x86_64-Standalone-Adept-nightly.zip -L https://github.com/AdeptLanguage/Adept/releases/download/Nightly/Windows-x86_64-Standalone-Adept-nightly.zip
         unzip Windows-x86_64-Standalone-Adept-nightly.zip
-        $env:Path = "$env:Path;${{github.workspace}}/adept-nightly-standalone"
+        "${{github.workspace}}/adept-nightly-standalone" >> $GITHUB_PATH
     - name: Download Adept Latest Standalone (macOS)
       if: matrix.os == 'macos-latest'
       run: |
         curl -o MacOS-arm64-Standalone-Adept-nightly.zip -L https://github.com/AdeptLanguage/Adept/releases/download/Nightly/MacOS-arm64-Standalone-Adept-nightly.zip
         unzip MacOS-arm64-Standalone-Adept-nightly.zip
-        export PATH="$PATH:${{github.workspace}}/adept-nightly-standalone"
+        "${{github.workspace}}/adept-nightly-standalone" >> $GITHUB_PATH
     - name: Download Adept Latest Standalone (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: |
         curl -o Ubuntu-x86_64-Standalone-Adept-nightly.zip -L https://github.com/AdeptLanguage/Adept/releases/download/Nightly/Ubuntu-x86_64-Standalone-Adept-nightly.zip
         unzip Ubuntu-x86_64-Standalone-Adept-nightly.zip
-        export PATH="$PATH:${{github.workspace}}/adept-nightly-standalone"
+        "${{github.workspace}}/adept-nightly-standalone" >> $GITHUB_PATH
     - name: make
       run: make
