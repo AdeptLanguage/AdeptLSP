@@ -11,6 +11,8 @@ You can add something like the following to your `init.lua`.
 
 Make sure to replace the path given for `--infrastructure` with the output of running `adept --root`.
 
+Also make sure to replace the path to `adeptls` inside the `cmd` table with the path to it on your system.
+
 ```
 vim.api.nvim_create_autocmd("FileType", {
     pattern = "adept",
@@ -34,6 +36,7 @@ vim.api.nvim_create_autocmd("FileType", {
 - Step 2: Open LSP Settings by clicking menu `Sublime Text -> Settings -> Package Settings -> LSP -> Settings`
 - Step 3: Add client for `adeptls` to configuration. Example `LSP.sublime-settings`:
 - Step 4: Make sure to replace the path given for `--infrastructure` with the output of running `adept --root`.
+- Step 5: Also make sure to replace the path to `adeptls` inside the `command` array with the path to it on your system.
 
 ```
 {
@@ -52,17 +55,22 @@ vim.api.nvim_create_autocmd("FileType", {
 ```
 
 ## Compiling from Scratch
+
+You can compile `adeptls` by navigating to the project folder, and then running:
+
 ```
 make
 ```
 
-And then the result is `./adeptls`
+(and then the result is `./adeptls`)
 
-Since this LSP relies on C code, a `Makefile` is provided.
+##### Why Makefile?
 
-It builds both the frontend language server as well as the backend insight server.
+Since this LSP relies on C code for the actual code insight, a `Makefile` is provided.
 
-If you only want to build the frontend, you can build it like a normal Adept project using:
+The `Makefile` builds both the frontend language server which handles processing/communication and the backend insight server which performs the code analysis.
+
+To only rebuild the frontend, you can build it like a normal Adept project using:
 
 ```
 adept

@@ -36,7 +36,7 @@ $(C_OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $< -o $@
 
 run: release
-	./adept-lsp
+	./adeptls
 
 clean:
 ifeq ($(OS), Windows_NT)
