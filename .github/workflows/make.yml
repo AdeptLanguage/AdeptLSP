@@ -47,8 +47,8 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: cmd
       run: make
-      env: |
-        SHELL=cmd
+      env:
+        SHELL: cmd
     - name: make (macOS)
       if: matrix.os == 'macos-latest'
       run: make
