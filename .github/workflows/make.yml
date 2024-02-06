@@ -43,5 +43,13 @@ jobs:
         curl -o Ubuntu-x86_64-Standalone-Adept-nightly.zip -L https://github.com/AdeptLanguage/Adept/releases/download/Nightly/Ubuntu-x86_64-Standalone-Adept-nightly.zip
         unzip Ubuntu-x86_64-Standalone-Adept-nightly.zip
         echo "${{github.workspace}}/adept-nightly-standalone" >> $GITHUB_PATH
-    - name: make
+    - name: make (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: cmd
+      run: make
+    - name: make (macOS)
+      if: matrix.os == 'macos-latest'
+      run: make
+    - name: make (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
       run: make
