@@ -59,4 +59,22 @@ jobs:
         sudo apt-get install -y llvm-15
         make
         ls
+    - name: Upload Build Artifact (Windows)
+      uses: actions/upload-artifact@v3
+      if: ${{ matrix.os == 'windows-latest' }}
+      with:
+        name: adeptls-windows
+        path: adeptls.exe
+    - name: Upload Build Artifact (macOS)
+      uses: actions/upload-artifact@v3
+      if: ${{ matrix.os == 'macos-latest' }}
+      with:
+        name: adeptls-macos
+        path: adeptls
+    - name: Upload Build Artifact (Ubuntu)
+      uses: actions/upload-artifact@v3
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      with:
+        name: adeptls-ubuntu
+        path: adeptls
 
