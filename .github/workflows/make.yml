@@ -29,7 +29,7 @@ jobs:
       shell: bash
       run: |
         curl -o Windows-x86_64-Standalone-Adept-nightly.zip -L https://github.com/AdeptLanguage/Adept/releases/download/Nightly/Windows-x86_64-Standalone-Adept-nightly.zip
-        unzip Windows-x86_64-Standalone-Adept-nightly.zip
+        7z x Windows-x86_64-Standalone-Adept-nightly.zip
         echo "${{github.workspace}}\adept-nightly-standalone" >> $GITHUB_PATH
     - name: Download Adept Latest Standalone (macOS)
       if: matrix.os == 'macos-latest'
