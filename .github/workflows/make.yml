@@ -51,4 +51,7 @@ jobs:
       run: make
     - name: make (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
-      run: make
+      run: |
+        sudo apt-get install -y llvm-15
+        make
+
