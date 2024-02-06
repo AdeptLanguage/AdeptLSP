@@ -45,13 +45,18 @@ jobs:
         echo "${{github.workspace}}/adept-nightly-standalone" >> $GITHUB_PATH
     - name: make (Windows)
       if: matrix.os == 'windows-latest'
-      run: mingw32-make SHELL=cmd
+      run: |
+        mingw32-make SHELL=cmd
+        dir
     - name: make (macOS)
       if: matrix.os == 'macos-latest'
-      run: make
+      run: |
+        make
+        ls
     - name: make (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get install -y llvm-15
         make
+        ls
 
