@@ -1,0 +1,46 @@
+name: Make CI/CD
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    defaults:
+      run:
+        working-directory: ${{github.workspace}}
+    steps:
+    - uses: actions/checkout@v3
+    - name: Configure to use MinGW-w64 (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: bash
+      run: |
+        export CC=x86_64-w64-mingw32-gcc
+        export CXX=x86_64-w64-mingw32-g++
+    - name: Download Adept Latest Standalone (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        curl -o Windows-x86_64-Standalone-Adept-nightly.zip -L https://github.com/AdeptLanguage/Adept/releases/download/Nightly/Windows-x86_64-Standalone-Adept-nightly.zip
+        unzip Windows-x86_64-Standalone-Adept-nightly.zip
+        $env:Path = "$env:Path;${{github.workspace}}/adept-nightly-standalone"
+    - name: Download Adept Latest Standalone (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        curl -o MacOS-arm64-Standalone-Adept-nightly.zip -L https://github.com/AdeptLanguage/Adept/releases/download/Nightly/MacOS-arm64-Standalone-Adept-nightly.zip
+        unzip MacOS-arm64-Standalone-Adept-nightly.zip
+        export PATH="$PATH:${{github.workspace}}/adept-nightly-standalone"
+    - name: Download Adept Latest Standalone (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        curl -o Ubuntu-x86_64-Standalone-Adept-nightly.zip -L https://github.com/AdeptLanguage/Adept/releases/download/Nightly/Ubuntu-x86_64-Standalone-Adept-nightly.zip
+        unzip Ubuntu-x86_64-Standalone-Adept-nightly.zip
+        export PATH="$PATH:${{github.workspace}}/adept-nightly-standalone"
+    - name: make
+      run: make
