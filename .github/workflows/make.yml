@@ -45,8 +45,8 @@ jobs:
         echo "${{github.workspace}}/adept-nightly-standalone" >> $GITHUB_PATH
     - name: make (Windows)
       if: matrix.os == 'windows-latest'
-      shell: cmd
-      run: make
+      shell: bash
+      run: SHELL=cmd make
     - name: make (macOS)
       if: matrix.os == 'macos-latest'
       run: make
