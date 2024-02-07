@@ -79,7 +79,7 @@ jobs:
         path: adeptls-ubuntu
   deploy:
     name: Deploy
-    needs: [test, build-windows-installer, build-macos-installer]
+    needs: [build]
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' }}
     steps:
