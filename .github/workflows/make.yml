@@ -5,6 +5,18 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+  workflow_dispatch:
+    inputs:
+      releaseName:
+        description: The GitHub release name
+        default: Nightly
+        required: true
+        type: string
+      releaseTagName:
+        description: The GitHub tag name to be created/updated
+        default: "nightly"
+        required: true
+        type: string
 
 jobs:
   build:
@@ -83,12 +95,24 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' }}
     steps:
+      - name: Get workflow dispatch inputs (workflow dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          echo 'releaseName=${{github.event.inputs.releaseName}}' >> $GITHUB_ENV
+          echo 'releaseTagName=v${{github.event.inputs.releaseTagName}}' >> $GITHUB_ENV
+      - name: Get default inputs (push / pr)
+        if: github.event_name != 'workflow_dispatch'
+        shell: bash
+        run: |
+          echo 'releaseName=Nightly' >> $GITHUB_ENV
+          echo 'releaseTagName=nightly' >> $GITHUB_ENV
       - name: Download Build Artifact (windows-latest)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v2
         with:
           name: adeptls-windows
       - name: Download Build Artifact (macos-latest)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v2
         with:
           name: adeptls-macos
       - name: Download Build Artifact (ubuntu-latest)
@@ -102,9 +126,9 @@ jobs:
         uses: IsaacShelton/update-existing-release@v1.3.3
         with:
           token: ${{secrets.GITHUB_TOKEN}}
-          release: Nightly
+          release: ${{env.releaseName}}
           body: ${{ format('Last built on {0} - {1}', steps.date.outputs.date, github.sha) }}
-          tag: nightly
+          tag: ${{env.releaseTagName}}
           replace: true
           files: >
             adeptls-windows.exe
