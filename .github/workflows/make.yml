@@ -108,11 +108,11 @@ jobs:
           echo 'releaseName=Nightly' >> $GITHUB_ENV
           echo 'releaseTagName=nightly' >> $GITHUB_ENV
       - name: Download Build Artifact (windows-latest)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: adeptls-windows
       - name: Download Build Artifact (macos-latest)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: adeptls-macos
       - name: Download Build Artifact (ubuntu-latest)
