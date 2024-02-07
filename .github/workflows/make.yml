@@ -47,34 +47,64 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         mingw32-make SHELL=cmd
-        dir
+        mv adeptls.exe adeptls-windows.exe
     - name: make (macOS)
       if: matrix.os == 'macos-latest'
       run: |
         make
-        ls
+        mv adeptls adeptls-macos
     - name: make (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get install -y llvm-15
         make
-        ls
+        mv adeptls adeptls-ubuntu
     - name: Upload Build Artifact (Windows)
       uses: actions/upload-artifact@v3
       if: ${{ matrix.os == 'windows-latest' }}
       with:
         name: adeptls-windows
-        path: adeptls.exe
+        path: adeptls-windows.exe
     - name: Upload Build Artifact (macOS)
       uses: actions/upload-artifact@v3
       if: ${{ matrix.os == 'macos-latest' }}
       with:
         name: adeptls-macos
-        path: adeptls
+        path: adeptls-macos
     - name: Upload Build Artifact (Ubuntu)
       uses: actions/upload-artifact@v3
       if: ${{ matrix.os == 'ubuntu-latest' }}
       with:
         name: adeptls-ubuntu
-        path: adeptls
+        path: adeptls-ubuntu
+  deploy:
+    name: Deploy
+    needs: [test, build-windows-installer, build-macos-installer]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
+    steps:
+      - name: Download Build Artifact (windows-latest)
+        uses: actions/download-artifact@v3
+        with:
+          name: adeptls-windows
+      - name: Download Build Artifact (macos-latest)
+        uses: actions/download-artifact@v3
+        with:
+          name: adeptls-macos
+      - name: Download Build Artifact (ubuntu-latest)
+        uses: actions/download-artifact@v3
+        with:
+          name: adeptls-ubuntu
+      - name: Release
+        uses: IsaacShelton/update-existing-release@v1.3.3
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          release: Nightly
+          body: ${{ format('Last built on {0} - {1}', steps.date.outputs.date, github.sha) }}
+          tag: nightly
+          replace: true
+          files: >
+            adeptls-windows.exe
+            adeptls-macos
+            adeptls-ubuntu
 
