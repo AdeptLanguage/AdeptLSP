@@ -3,7 +3,7 @@ Adept Language Server
 
 ## Installation
 
-Download `adeptls` binary or build it from source, then follow the directions below for your editor:
+[Download `adeptls` binary for your platform](https://github.com/AdeptLanguage/AdeptLSP/releases/tag/nightly) or build it from source, then follow the directions below for your editor:
 
 #### Neovim
 
