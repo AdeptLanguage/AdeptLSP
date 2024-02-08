@@ -34,9 +34,8 @@ vim.api.nvim_create_autocmd("FileType", {
 
 - Step 1: Install [LSP Package](https://github.com/sublimelsp/LSP) from Package Control 
 - Step 2: Open LSP Settings by clicking menu `Sublime Text -> Settings -> Package Settings -> LSP -> Settings`
-- Step 3: Add client for `adeptls` to configuration. Example `LSP.sublime-settings`:
-- Step 4: Make sure to replace the path given for `--infrastructure` with the output of running `adept --root`.
-- Step 5: Also make sure to replace the path to `adeptls` inside the `command` array with the path to it on your system.
+- Step 3: Add client for `adeptls` to configuration. See below for example `LSP.sublime-settings`:
+
 
 ```
 {
@@ -53,6 +52,9 @@ vim.api.nvim_create_autocmd("FileType", {
     }
 }
 ```
+
+- Step 4: Make sure to replace the path given for `--infrastructure` with the output of running `adept --root`.
+- Step 5: Also make sure to replace the path to `adeptls` inside the `command` array with the path to it on your system.
 
 ## Compiling from Scratch
 
