@@ -58,6 +58,8 @@ func main(argc int, argv **ubyte) int {
             closeDocument(message)
         } elif message.method == "textDocument/didChange" {
             changeDocument(message)
+        } elif message.method == "textDocument/completion" {
+            completion(message)
         }
     }
 
@@ -75,7 +77,11 @@ func initialize(id JSON) {
         AsymmetricPair("textDocumentSync", JSON({
             AsymmetricPair("openClose", JSON(true)),
             AsymmetricPair("change", JSON(TEXT_DOCUMENT_SYNC_KIND_FULL))
-        }))
+        })),
+        AsymmetricPair("completionProvider", JSON({
+            AsymmetricPair("triggerCharacters", JSON\array()),
+            AsymmetricPair("resolveProvider", JSON(true))
+        })),
     }
 
     response JSON = JSON({
@@ -202,3 +208,42 @@ func hover(message *Message) {
 
     lsp\writeMessage(response)
 }
+
+
+func completion(message *Message) {
+    id JSON = message.id
+    text_document JSON = message.params.field("textDocument")
+    position Position = Position(message.params.field("position"))
+    uri String = text_document.field("uri").string().orElse("")
+
+    /*
+        UNUSED VALUES:
+        context JSON = message.params.field("context")
+        trigger_kind int = context.field("triggerKind").number().orElse(0.0) as int
+    */
+
+    items JSON = JSON\array()
+
+    items.add(JSON({
+        AsymmetricPair("label", JSON("this is a label")),
+        /* AsymmetricPair("kind", JSON(TODO_COMPLETION_KIND)), */
+    }))
+
+    result JSON = JSON\null()
+
+    if items.kind() != ::NULL {
+        result = JSON({
+            AsymmetricPair("isIncomplete", JSON(true)),
+            AsymmetricPair("items", items.commit()),
+        })
+    }
+
+    response JSON = JSON({
+        AsymmetricPair("jsonrpc", JSON("2.0")),
+        AsymmetricPair("id", id.toOwned()),
+        AsymmetricPair("result", result.toOwned())
+    })
+
+    lsp\writeMessage(response)
+}
+
