@@ -1,5 +1,5 @@
 
-foreign "obj/insight.a"
+foreign "../obj/insight.a"
 foreign server_main(*ubyte) *ubyte
 
 func invokeInsight(json JSON) JSON {

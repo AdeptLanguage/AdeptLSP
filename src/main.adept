@@ -1,0 +1,284 @@
+
+import basics
+import "insight.adept"
+import "lsp.adept"
+import "log.adept"
+import "document.adept"
+import "update.adept"
+import "datatypes.adept"
+import "text.adept"
+import "args.adept"
+import "constants.adept"
+
+func main(argc int, argv **ubyte) int {
+    adeptls\running bool = true
+    adeptls\did_shutdown bool = false
+
+    log("Starting up adeptls!\n")
+
+    log("Initializing logging...\n")
+    initializeLogging()
+
+    log("Parsing arguments...\n")
+    unless parseArgs(argc, argv) {
+        return 1
+    }
+
+    log("Waiting for initialization request...\n")
+
+    while adeptls\running {
+        log("Waiting for next message...\n")
+        message *Message = lsp\readMessage()
+
+        defer {
+            log("Disposing of message...\n")
+            del(message)
+        }
+
+        log("Processing Message:\n")
+        log("%S\n", message.toString())
+        log("\n")
+
+        if message.method == "initialize" {
+            initialize(message.id)
+        } elif message.method == "initialized" {
+            initialized()
+        } elif message.method == "shutdown" {
+            shutdown(message.id)
+            adeptls\did_shutdown = true
+        } elif message.method == "exit" {
+            adeptls\running = false
+        } elif message.method == "textDocument/hover" {
+            hover(message)
+        } elif message.method == "textDocument/didOpen" {
+            openDocument(message)
+        } elif message.method == "textDocument/didClose" {
+            closeDocument(message)
+        } elif message.method == "textDocument/didChange" {
+            changeDocument(message)
+        } elif message.method == "textDocument/completion" {
+            completion(message)
+        }
+    }
+
+    log("Exiting!\n")
+
+    finalizeLogging()
+    return adeptls\did_shutdown ? 0 : 1
+}
+
+define TEXT_DOCUMENT_SYNC_KIND_FULL = 1.0
+
+func initialize(id JSON) {
+    capabilities <<String, JSON> AsymmetricPair> InitializerList = {
+        AsymmetricPair("hoverProvider", JSON(true)),
+        AsymmetricPair("textDocumentSync", JSON({
+            AsymmetricPair("openClose", JSON(true)),
+            AsymmetricPair("change", JSON(TEXT_DOCUMENT_SYNC_KIND_FULL))
+        })),
+        AsymmetricPair("completionProvider", JSON({
+            AsymmetricPair("triggerCharacters", JSON({ JSON("\\") })),
+        })),
+    }
+
+    response JSON = JSON({
+        AsymmetricPair("jsonrpc", JSON("2.0")),
+        AsymmetricPair("id", id),
+        AsymmetricPair("result", JSON({
+            AsymmetricPair("capabilities", JSON(capabilities)),
+            AsymmetricPair("serverInfo", JSON({
+                AsymmetricPair("name", JSON("adeptls")),
+                AsymmetricPair("version", JSON("2.8"))
+            }))
+        }))
+    })
+
+    lsp\writeMessage(response)
+}
+
+func initialized() {
+    log("Initialization successful!\n")
+}
+
+func shutdown(id JSON) {
+    response JSON = JSON({
+        AsymmetricPair("jsonrpc", JSON("2.0")),
+        AsymmetricPair("id", id),
+        AsymmetricPair("result", JSON\null())
+    })
+
+    lsp\writeMessage(response)
+}
+
+func hover(message *Message) {
+    id JSON = message.id
+    text_document JSON = message.params.field("textDocument")
+    position Position = Position(message.params.field("position"))
+    uri String = text_document.field("uri").string().orElse("")
+
+    document *Document = adeptls\documents.documents.getPointer(uri)
+    hover_text String
+    
+    if document, each IdentifierToken in static document.identifierTokens {
+        if it.range.contains(position) {
+            // Append function definitions that have the same name as the identifier being hovered
+            each function Function in static document.functions {
+                if function.symbol.name == it.content {
+                    if hover_text != "" {
+                        hover_text.append('\n'ub)
+                    }
+                    hover_text.append(function.symbol.definition)
+                }
+            }
+
+            // Append composite definitions that have the same name as the identifier being hovered
+            each composite Composite in static document.composites {
+                if composite.symbol.name == it.content {
+                    if hover_text != "" {
+                        hover_text.append('\n'ub)
+                    }
+                    hover_text.append(composite.symbol.definition)
+                }
+            }
+
+            // Append alias definitions that have the same name as the identifier being hovered
+            each an_alias Alias in static document.aliases {
+                if an_alias.symbol.name == it.content {
+                    if hover_text != "" {
+                        hover_text.append('\n'ub)
+                    }
+                    hover_text.append(an_alias.symbol.definition)
+                }
+            }
+
+            // Append function alias definitions that have the same name as the identifier being hovered
+            each function_alias FunctionAlias in static document.function_aliases {
+                if function_alias.symbol.name == it.content {
+                    if hover_text != "" {
+                        hover_text.append('\n'ub)
+                    }
+                    hover_text.append(function_alias.symbol.definition)
+                }
+            }
+
+            // Append enum definitions that have the same name as the identifier being hovered
+            each an_enum Enum in static document.enums {
+                if an_enum.symbol.name == it.content {
+                    if hover_text != "" {
+                        hover_text.append('\n'ub)
+                    }
+                    hover_text.append(an_enum.symbol.definition)
+                }
+            }
+
+            each named_expression NamedExpression in static document.named_expressions {
+                if named_expression.symbol.name == it.content {
+                    if hover_text != "" {
+                        hover_text.append('\n'ub)
+                    }
+                    hover_text.append(named_expression.symbol.definition)
+                }
+            }
+
+            break
+        }
+    }
+
+    result JSON
+
+    if hover_text == "" {
+        result = JSON\null()
+    } else {
+        result = JSON({
+            AsymmetricPair("contents", JSON({
+                AsymmetricPair("kind", JSON("plaintext")),
+                AsymmetricPair("value", JSON(hover_text.commit()))
+            }))
+        })
+    }
+
+    response JSON = JSON({
+        AsymmetricPair("jsonrpc", JSON("2.0")),
+        AsymmetricPair("id", id.toOwned()),
+        AsymmetricPair("result", result.toOwned())
+    })
+
+    lsp\writeMessage(response)
+}
+
+func completion(message *Message) {
+    id JSON = message.id
+    text_document JSON = message.params.field("textDocument")
+    _position Position = Position(message.params.field("position"))
+    uri String = text_document.field("uri").string().orElse("")
+
+    document *Document = adeptls\documents.documents.getPointer(uri)
+    items JSON = JSON\array()
+
+    if document {
+        each Function in static document.functions {
+            items.add(JSON({
+                AsymmetricPair("label", JSON(it.symbol.name.clone())),
+                AsymmetricPair("kind", JSON(CompletionItemKind\Function)),
+                AsymmetricPair("detail", JSON(it.symbol.definition.clone())),
+            }))
+        }
+
+        each FunctionAlias in static document.function_aliases {
+            items.add(JSON({
+                AsymmetricPair("label", JSON(it.symbol.name.clone())),
+                AsymmetricPair("kind", JSON(CompletionItemKind\Function)),
+                AsymmetricPair("detail", JSON(it.symbol.definition.clone())),
+            }))
+        }
+
+        each NamedExpression in static document.named_expressions {
+            items.add(JSON({
+                AsymmetricPair("label", JSON(it.symbol.name.clone())),
+                AsymmetricPair("kind", JSON(CompletionItemKind\Constant)),
+                AsymmetricPair("detail", JSON(it.symbol.definition.clone())),
+            }))
+        }
+
+        each Composite in static document.composites {
+            items.add(JSON({
+                AsymmetricPair("label", JSON(it.symbol.name.clone())),
+                AsymmetricPair("kind", JSON(CompletionItemKind\Struct)),
+                AsymmetricPair("detail", JSON(it.symbol.definition.clone())),
+            }))
+        }
+
+        each Enum in static document.enums {
+            items.add(JSON({
+                AsymmetricPair("label", JSON(it.symbol.name.clone())),
+                AsymmetricPair("kind", JSON(CompletionItemKind\Enum)),
+                AsymmetricPair("detail", JSON(it.symbol.definition.clone())),
+            }))
+        }
+
+        each Alias in static document.aliases {
+            items.add(JSON({
+                AsymmetricPair("label", JSON(it.symbol.name.clone())),
+                AsymmetricPair("kind", JSON(CompletionItemKind\Struct)),
+                AsymmetricPair("detail", JSON(it.symbol.definition.clone())),
+            }))
+        }
+    }
+
+    result JSON = JSON\null()
+
+    if items.kind() != ::NULL {
+        result = JSON({
+            AsymmetricPair("isIncomplete", JSON(true)),
+            AsymmetricPair("items", items.commit()),
+        })
+    }
+
+    response JSON = JSON({
+        AsymmetricPair("jsonrpc", JSON("2.0")),
+        AsymmetricPair("id", id.toOwned()),
+        AsymmetricPair("result", result.toOwned())
+    })
+
+    lsp\writeMessage(response)
+}

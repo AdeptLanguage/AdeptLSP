@@ -2,19 +2,20 @@
 import cstdio
 import terminal
 
+#default adeptls\enable_logging false
+
 adeptls\log_filename *ubyte = '/tmp/adeptls.log'
 adeptls\log_file *FILE = null
-adeptls\enable_logging bool = false
 
 func initializeLogging(){
-    if adeptls\enable_logging {
+    #if adeptls\enable_logging
         adeptls\log_file = fopen(adeptls\log_filename, 'a')
 
         if adeptls\log_file == null {
             fprintf(stderr, "Failed to open logging file\n")
             abort()
         }
-    }
+    #end
 }
 
 func finalizeLogging(){
