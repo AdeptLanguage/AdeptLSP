@@ -21,7 +21,7 @@ INCLUDE=include
 INSIGHT_INCLUDE=$(SRCDIR)/INSIGHT/include
 INSIGHT=obj/insight.a
 C_OBJECTS=$(C_SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-CFLAGS=-c -Wall -I"include" -I"$(SRCDIR)/INSIGHT/include" -O3 -DADEPT_INSIGHT_BUILD
+CFLAGS=-c -Wall -I"$(SRCDIR)/include" -I"$(SRCDIR)/INSIGHT/include" -O3 -DADEPT_INSIGHT_BUILD
 
 release: $(INSIGHT) $(ADEPT_SOURCES)
 	$(ADEPT2-8) main.adept
@@ -35,14 +35,11 @@ $(INSIGHT): out-directories $(C_OBJECTS)
 $(C_OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $< -o $@
 
-run: release
-	./adeptls
-
 clean:
 ifeq ($(OS), Windows_NT)
 	rmdir /s /q obj/
 else
-	rm -r obj/
+	rm -rf ./obj/
 endif
 
 deepclean: clean
