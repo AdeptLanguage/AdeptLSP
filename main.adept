@@ -80,8 +80,7 @@ func initialize(id JSON) {
             AsymmetricPair("change", JSON(TEXT_DOCUMENT_SYNC_KIND_FULL))
         })),
         AsymmetricPair("completionProvider", JSON({
-            AsymmetricPair("triggerCharacters", JSON\array()),
-            AsymmetricPair("resolveProvider", JSON(true))
+            AsymmetricPair("triggerCharacters", JSON({ JSON("\\") })),
         })),
     }
 
@@ -217,7 +216,6 @@ func completion(message *Message) {
     uri String = text_document.field("uri").string().orElse("")
 
     document *Document = adeptls\documents.documents.getPointer(uri)
-
     items JSON = JSON\array()
 
     if document {
@@ -225,6 +223,47 @@ func completion(message *Message) {
             items.add(JSON({
                 AsymmetricPair("label", JSON(it.symbol.name.clone())),
                 AsymmetricPair("kind", JSON(CompletionItemKind\Function)),
+                AsymmetricPair("detail", JSON(it.symbol.definition.clone())),
+            }))
+        }
+
+        each FunctionAlias in static document.function_aliases {
+            items.add(JSON({
+                AsymmetricPair("label", JSON(it.symbol.name.clone())),
+                AsymmetricPair("kind", JSON(CompletionItemKind\Function)),
+                AsymmetricPair("detail", JSON(it.symbol.definition.clone())),
+            }))
+        }
+
+        each NamedExpression in static document.named_expressions {
+            items.add(JSON({
+                AsymmetricPair("label", JSON(it.symbol.name.clone())),
+                AsymmetricPair("kind", JSON(CompletionItemKind\Constant)),
+                AsymmetricPair("detail", JSON(it.symbol.definition.clone())),
+            }))
+        }
+
+        each Composite in static document.composites {
+            items.add(JSON({
+                AsymmetricPair("label", JSON(it.symbol.name.clone())),
+                AsymmetricPair("kind", JSON(CompletionItemKind\Struct)),
+                AsymmetricPair("detail", JSON(it.symbol.definition.clone())),
+            }))
+        }
+
+        each Enum in static document.enums {
+            items.add(JSON({
+                AsymmetricPair("label", JSON(it.symbol.name.clone())),
+                AsymmetricPair("kind", JSON(CompletionItemKind\Enum)),
+                AsymmetricPair("detail", JSON(it.symbol.definition.clone())),
+            }))
+        }
+
+        each Alias in static document.aliases {
+            items.add(JSON({
+                AsymmetricPair("label", JSON(it.symbol.name.clone())),
+                AsymmetricPair("kind", JSON(CompletionItemKind\Struct)),
+                AsymmetricPair("detail", JSON(it.symbol.definition.clone())),
             }))
         }
     }
