@@ -58,6 +58,8 @@ func main(argc int, argv **ubyte) int {
             changeDocument(message)
         } elif message.method == "textDocument/completion" {
             completion(message)
+        } elif message.method == "textDocument/definition" {
+            definition(message)
         }
     }
 
@@ -72,6 +74,7 @@ define TEXT_DOCUMENT_SYNC_KIND_FULL = 1.0
 func initialize(id JSON) {
     capabilities <<String, JSON> AsymmetricPair> InitializerList = {
         AsymmetricPair("hoverProvider", JSON(true)),
+        AsymmetricPair("definitionProvider", JSON(true)),
         AsymmetricPair("textDocumentSync", JSON({
             AsymmetricPair("openClose", JSON(true)),
             AsymmetricPair("change", JSON(TEXT_DOCUMENT_SYNC_KIND_FULL))
@@ -272,6 +275,46 @@ func completion(message *Message) {
             AsymmetricPair("isIncomplete", JSON(true)),
             AsymmetricPair("items", items.commit()),
         })
+    }
+
+    response JSON = JSON({
+        AsymmetricPair("jsonrpc", JSON("2.0")),
+        AsymmetricPair("id", id.toOwned()),
+        AsymmetricPair("result", result.toOwned())
+    })
+
+    lsp\writeMessage(response)
+}
+
+func definition(message *Message) {
+    id JSON = message.id
+    text_document JSON = message.params.field("textDocument")
+    position Position = Position(message.params.field("position"))
+    uri String = text_document.field("uri").string().orElse("")
+
+    result JSON = JSON\null()
+    document *Document = adeptls\documents.documents.getPointer(uri)
+
+    if document {
+        text_index <usize> Optional = getTextIndex(document.text_content, position)
+
+        if text_index.has {
+            result = JSON\array()
+
+            result.add(JSON({
+                AsymmetricPair("uri", JSON(uri.clone())),
+                AsymmetricPair("range", JSON({
+                    AsymmetricPair("start", JSON({
+                        AsymmetricPair("line", JSON(0)),
+                        AsymmetricPair("character", JSON(0)),
+                    })),
+                    AsymmetricPair("end", JSON({
+                        AsymmetricPair("line", JSON(0)),
+                        AsymmetricPair("character", JSON(0)),
+                    })),
+                }))
+            }))
+        }
     }
 
     response JSON = JSON({
