@@ -1,0 +1,27 @@
+
+define CompletionItemKind\Text = 1
+define CompletionItemKind\Method = 2
+define CompletionItemKind\Function = 3
+define CompletionItemKind\Constructor = 4
+define CompletionItemKind\Field = 5
+define CompletionItemKind\Variable = 6
+define CompletionItemKind\Class = 7
+define CompletionItemKind\Interface = 8
+define CompletionItemKind\Module = 9
+define CompletionItemKind\Property = 10
+define CompletionItemKind\Unit = 11
+define CompletionItemKind\Value = 12
+define CompletionItemKind\Enum = 13
+define CompletionItemKind\Keyword = 14
+define CompletionItemKind\Snippet = 15
+define CompletionItemKind\Color = 16
+define CompletionItemKind\File = 17
+define CompletionItemKind\Reference = 18
+define CompletionItemKind\Folder = 19
+define CompletionItemKind\EnumMember = 20
+define CompletionItemKind\Constant = 21
+define CompletionItemKind\Struct = 22
+define CompletionItemKind\Event = 23
+define CompletionItemKind\Operator = 24
+define CompletionItemKind\TypeParameter = 25
+
