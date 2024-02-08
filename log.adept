@@ -4,7 +4,7 @@ import terminal
 
 adeptls\log_filename *ubyte = '/tmp/adeptls.log'
 adeptls\log_file *FILE = null
-adeptls\enable_logging bool = true
+adeptls\enable_logging bool = false
 
 func initializeLogging(){
     if adeptls\enable_logging {
@@ -26,8 +26,9 @@ func finalizeLogging(){
 
 pragma __builtin_warn_bad_printf_format
 func log(format String, args ...) {
+    vsprintf(def result String, format, args)
+
     if adeptls\log_file != null {
-        vsprintf(def result String, format, args)
         fwrite(result.array, 1, result.length, adeptls\log_file)
         fflush(adeptls\log_file)
     }

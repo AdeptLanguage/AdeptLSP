@@ -285,4 +285,3 @@ func completion(message *Message) {
 
     lsp\writeMessage(response)
 }
-
