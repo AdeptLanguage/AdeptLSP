@@ -11,6 +11,7 @@ import "update.adept"
 import "datatypes.adept"
 import "text.adept"
 import "args.adept"
+import "constants.adept"
 
 func main(argc int, argv **ubyte) int {
     adeptls\running bool = true
@@ -122,7 +123,7 @@ func hover(message *Message) {
     document *Document = adeptls\documents.documents.getPointer(uri)
     hover_text String
     
-    each IdentifierToken in static document.identifierTokens {
+    if document, each IdentifierToken in static document.identifierTokens {
         if it.range.contains(position) {
             // Append function definitions that have the same name as the identifier being hovered
             each function Function in static document.functions {
@@ -209,25 +210,24 @@ func hover(message *Message) {
     lsp\writeMessage(response)
 }
 
-
 func completion(message *Message) {
     id JSON = message.id
     text_document JSON = message.params.field("textDocument")
-    position Position = Position(message.params.field("position"))
+    _position Position = Position(message.params.field("position"))
     uri String = text_document.field("uri").string().orElse("")
 
-    /*
-        UNUSED VALUES:
-        context JSON = message.params.field("context")
-        trigger_kind int = context.field("triggerKind").number().orElse(0.0) as int
-    */
+    document *Document = adeptls\documents.documents.getPointer(uri)
 
     items JSON = JSON\array()
 
-    items.add(JSON({
-        AsymmetricPair("label", JSON("this is a label")),
-        /* AsymmetricPair("kind", JSON(TODO_COMPLETION_KIND)), */
-    }))
+    if document {
+        each Function in static document.functions {
+            items.add(JSON({
+                AsymmetricPair("label", JSON(it.symbol.name.clone())),
+                AsymmetricPair("kind", JSON(CompletionItemKind\Function)),
+            }))
+        }
+    }
 
     result JSON = JSON\null()
 
