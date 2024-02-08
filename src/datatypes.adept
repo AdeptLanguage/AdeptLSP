@@ -2,6 +2,8 @@
 import basics
 import JSON
 
+record Source (object String, index, stride usize)
+
 record Position (line, character usize) {
     constructor(json JSON) {
         this.line = json.field("line").number().orElse(0.0) as usize
