@@ -113,6 +113,18 @@ func shutdown(id JSON) {
     lsp\writeMessage(response)
 }
 
+func getIdentifierTokenUnderCaret(document *Document, position Position) <IdentifierToken> Optional {
+    if document == null, return none()
+
+    each IdentifierToken in static document.identifierTokens {
+        if it.range.contains(position) {
+            return some(it)
+        }
+    }
+
+    return none()
+}
+
 func hover(message *Message) {
     id JSON = message.id
     text_document JSON = message.params.field("textDocument")
@@ -121,69 +133,69 @@ func hover(message *Message) {
 
     document *Document = adeptls\documents.documents.getPointer(uri)
     hover_text String
+
+    identifer_token <IdentifierToken> Optional = getIdentifierTokenUnderCaret(document, position)
+
+    if identifer_token.has {
+        identifier StringView = identifer_token.value.content
     
-    if document, each IdentifierToken in static document.identifierTokens {
-        if it.range.contains(position) {
-            // Append function definitions that have the same name as the identifier being hovered
-            each function Function in static document.functions {
-                if function.symbol.name == it.content {
-                    if hover_text != "" {
-                        hover_text.append('\n'ub)
-                    }
-                    hover_text.append(function.symbol.definition)
+        // Append function definitions that have the same name as the identifier being hovered
+        each Function in static document.functions {
+            if it.symbol.name == identifier {
+                if hover_text != "" {
+                    hover_text.append('\n'ub)
                 }
+                hover_text.append(it.symbol.definition)
             }
+        }
 
-            // Append composite definitions that have the same name as the identifier being hovered
-            each composite Composite in static document.composites {
-                if composite.symbol.name == it.content {
-                    if hover_text != "" {
-                        hover_text.append('\n'ub)
-                    }
-                    hover_text.append(composite.symbol.definition)
+        // Append composite definitions that have the same name as the identifier being hovered
+        each Composite in static document.composites {
+            if it.symbol.name == identifier {
+                if hover_text != "" {
+                    hover_text.append('\n'ub)
                 }
+                hover_text.append(it.symbol.definition)
             }
+        }
 
-            // Append alias definitions that have the same name as the identifier being hovered
-            each an_alias Alias in static document.aliases {
-                if an_alias.symbol.name == it.content {
-                    if hover_text != "" {
-                        hover_text.append('\n'ub)
-                    }
-                    hover_text.append(an_alias.symbol.definition)
+        // Append alias definitions that have the same name as the identifier being hovered
+        each Alias in static document.aliases {
+            if it.symbol.name == identifier {
+                if hover_text != "" {
+                    hover_text.append('\n'ub)
                 }
+                hover_text.append(it.symbol.definition)
             }
+        }
 
-            // Append function alias definitions that have the same name as the identifier being hovered
-            each function_alias FunctionAlias in static document.function_aliases {
-                if function_alias.symbol.name == it.content {
-                    if hover_text != "" {
-                        hover_text.append('\n'ub)
-                    }
-                    hover_text.append(function_alias.symbol.definition)
+        // Append function alias definitions that have the same name as the identifier being hovered
+        each FunctionAlias in static document.function_aliases {
+            if it.symbol.name == identifier {
+                if hover_text != "" {
+                    hover_text.append('\n'ub)
                 }
+                hover_text.append(it.symbol.definition)
             }
+        }
 
-            // Append enum definitions that have the same name as the identifier being hovered
-            each an_enum Enum in static document.enums {
-                if an_enum.symbol.name == it.content {
-                    if hover_text != "" {
-                        hover_text.append('\n'ub)
-                    }
-                    hover_text.append(an_enum.symbol.definition)
+        // Append enum definitions that have the same name as the identifier being hovered
+        each Enum in static document.enums {
+            if it.symbol.name == identifier {
+                if hover_text != "" {
+                    hover_text.append('\n'ub)
                 }
+                hover_text.append(it.symbol.definition)
             }
+        }
 
-            each named_expression NamedExpression in static document.named_expressions {
-                if named_expression.symbol.name == it.content {
-                    if hover_text != "" {
-                        hover_text.append('\n'ub)
-                    }
-                    hover_text.append(named_expression.symbol.definition)
+        each NamedExpression in static document.named_expressions {
+            if it.symbol.name == identifier {
+                if hover_text != "" {
+                    hover_text.append('\n'ub)
                 }
+                hover_text.append(it.symbol.definition)
             }
-
-            break
         }
     }
 
@@ -299,32 +311,10 @@ func definition(message *Message) {
         text_index <usize> Optional = getTextIndex(document.text_content, position)
 
         if text_index.has {
-            result = JSON\array()
+            identifer_token <IdentifierToken> Optional = getIdentifierTokenUnderCaret(document, position)
+            identifer StringView = identifer_token.value.content
 
-            /*
-            result.add(JSON({
-                AsymmetricPair("uri", JSON(uri.clone())),
-                AsymmetricPair("range", JSON({
-                    AsymmetricPair("start", JSON({
-                        AsymmetricPair("line", JSON(0)),
-                        AsymmetricPair("character", JSON(0)),
-                    })),
-                    AsymmetricPair("end", JSON({
-                        AsymmetricPair("line", JSON(0)),
-                        AsymmetricPair("character", JSON(0)),
-                    })),
-                }))
-            }))
-            */
-
-            if document.functions.length > 0 {
-                function Function = document.functions[0]
-                location <Location> Optional = function.symbol.source.toLocation()
-
-                if location.has {
-                    result.add(location.value.toJSON())
-                }
-            }
+            result = getDefinitionsFor(document, identifer)
         }
     }
 
@@ -336,3 +326,22 @@ func definition(message *Message) {
 
     lsp\writeMessage(response)
 }
+
+func getDefinitionsFor(document *Document, identifier String) JSON {
+    if document == null, return JSON\null()
+
+    result JSON = JSON\array()
+
+    each Function in document.functions {
+        if it.symbol.name == identifier {
+            location <Location> Optional = it.symbol.source.toLocation()
+
+            if location.has {
+                result.add(location.value.toJSON())
+            }
+        }
+    }
+
+    return result.commit()
+}
+
