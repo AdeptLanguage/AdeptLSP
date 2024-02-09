@@ -301,6 +301,7 @@ func definition(message *Message) {
         if text_index.has {
             result = JSON\array()
 
+            /*
             result.add(JSON({
                 AsymmetricPair("uri", JSON(uri.clone())),
                 AsymmetricPair("range", JSON({
@@ -314,6 +315,16 @@ func definition(message *Message) {
                     })),
                 }))
             }))
+            */
+
+            if document.functions.length > 0 {
+                function Function = document.functions[0]
+                location <Location> Optional = function.symbol.source.toLocation()
+
+                if location.has {
+                    result.add(location.value.toJSON())
+                }
+            }
         }
     }
 

@@ -1,4 +1,6 @@
 
+import cstdio
+
 func getTextIndex(text String, position Position) <usize> Optional {
     line usize = 0
     character usize = 0
@@ -16,6 +18,42 @@ func getTextIndex(text String, position Position) <usize> Optional {
         }
     }
 
-    return none() ~> <usize> Optional
+    return none()
+}
+
+func getTextPosition(filename String, index usize) <Position> Optional {
+    filename_cstr *ubyte = filename.cstr()
+    defer delete filename_cstr
+
+    line, character usize = 0
+
+    f *FILE = fopen(filename_cstr, 'r')
+
+    if f == null {
+        return none()
+    }
+
+    buf 1 ubyte
+
+    for count usize = 0; count < index; count++ {
+        res int = fread(&buf, sizeof ubyte, 1, f)
+
+        if res == 0 {
+            return none()
+        }
+
+        if res < 0 {
+            return none()
+        }
+
+        if buf[0] == '\n'ub {
+            line++
+            character = 0
+        } else {
+            character++
+        }
+    }
+
+    return some(Position(line, character))
 }
 

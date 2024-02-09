@@ -1,8 +1,57 @@
 
 import basics
 import JSON
+import "text.adept"
 
-record Source (object String, index, stride usize)
+record Location (uri String, range Range) {
+    constructor(json JSON) {
+        this.uri = json.field("uri").string().orElse("").toOwned()
+        this.range = Range(json.field("range"))
+    }
+
+    func toJSON() JSON {
+        return JSON({
+            AsymmetricPair("uri", JSON(this.uri.clone())),
+            AsymmetricPair("range", JSON({
+                AsymmetricPair("start", JSON({
+                    AsymmetricPair("line", JSON(this.range.start.line)),
+                    AsymmetricPair("character", JSON(this.range.end.character)),
+                })),
+                AsymmetricPair("end", JSON({
+                    AsymmetricPair("line", JSON(this.range.end.line)),
+                    AsymmetricPair("character", JSON(this.range.end.character)),
+                })),
+            }))
+        })
+    }
+}
+
+record Source (object String, index, stride usize) {
+    constructor(json JSON) {
+        this.object = json.field("object").string().orElse("").toOwned()
+        this.index = json.field("index").number().orElse(0.0) as usize
+        this.stride = json.field("stride").number().orElse(0.0) as usize
+    }
+
+    func toLocation() <Location> Optional {
+        uri String = "file://" + this.object
+        position <Position> Optional = getTextPosition(this.object, this.index)
+
+        if position.has {
+            return some(Location(uri.commit(), Range(position.value, position.value)))
+        } else {
+            return none()
+        }
+    }
+
+    func clone() Source {
+        source POD Source
+        source.object = POD this.object.clone()
+        source.index = this.index
+        source.stride = this.stride
+        return source
+    }
+}
 
 record Position (line, character usize) {
     constructor(json JSON) {
@@ -58,14 +107,15 @@ record IdentifierToken (content String, range Range) {
 }
 
 
-record Symbol (name, definition String) {
+record Symbol (name, definition String, source Source) {
     constructor(json JSON) {
         this.name = json.field("name").string().orElse("").toOwned()
         this.definition = json.field("definition").string().orElse("").toOwned()
+        this.source.__constructor__(json.field("source"))
     }
 
     func clone Symbol {
-        return Symbol(this.name.clone(), this.definition.clone())
+        return Symbol(this.name.clone(), this.definition.clone(), this.source.clone())
     }
 }
 
