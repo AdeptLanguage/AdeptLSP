@@ -342,6 +342,26 @@ func getDefinitionsFor(document *Document, identifier String) JSON {
         }
     }
 
+    each FunctionAlias in document.function_aliases {
+        if it.symbol.name == identifier {
+            location <Location> Optional = it.symbol.source.toLocation()
+
+            if location.has {
+                result.add(location.value.toJSON())
+            }
+        }
+    }
+
+    each Composite in document.composites {
+        if it.symbol.name == identifier {
+            location <Location> Optional = it.symbol.source.toLocation()
+
+            if location.has {
+                result.add(location.value.toJSON())
+            }
+        }
+    }
+
     return result.commit()
 }
 
