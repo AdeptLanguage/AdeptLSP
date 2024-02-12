@@ -1,5 +1,6 @@
 
 import basics
+import "datatypes.adept"
 
 func update(uri String) {
     log("Running update...\n")
@@ -24,6 +25,27 @@ func update(uri String) {
 
     if response.kind() == ::STRING {
         // Error occurred
+
+        message String = response.string().orElse("")
+
+        document.diagnostics.clear()
+        document.diagnostics.add(Diagnostic(::ERROR, Range\empty(), message.toOwned()))
+
+        publishDiagnostics(document)
+        return
+    }
+
+    validation <<JSON> List> Optional = response.field("validation").array()
+
+    if validation.has {
+        document.diagnostics.clear()
+
+        each JSON in validation.value {
+            log("Creating diagnostic %S\n", toString(it))
+            *document.diagnostics.add() = Diagnostic(it, document)
+        }
+
+        publishDiagnostics(document)
     }
 
     ast JSON = response.field("ast")
@@ -39,7 +61,7 @@ func update(uri String) {
         document.identifierTokens.clear()
 
         each JSON in static identifierTokens.value {
-            *document.identifierTokens.add() = POD IdentifierToken(it)
+            *document.identifierTokens.add() = IdentifierToken(it)
         }
     }
 
@@ -48,7 +70,7 @@ func update(uri String) {
         document.functions.clear()
 
         each JSON in static functions.value {
-            *document.functions.add() = POD Function(it)
+            *document.functions.add() = Function(it)
         }
     }
 
@@ -57,7 +79,7 @@ func update(uri String) {
         document.composites.clear()
 
         each JSON in static composites.value {
-            *document.composites.add() = POD Composite(it)
+            *document.composites.add() = Composite(it)
         }
     }
 
@@ -66,7 +88,7 @@ func update(uri String) {
         document.aliases.clear()
 
         each JSON in static aliases.value {
-            *document.aliases.add() = POD Alias(it)
+            *document.aliases.add() = Alias(it)
         }
     }
 
@@ -75,7 +97,7 @@ func update(uri String) {
         document.function_aliases.clear()
 
         each JSON in static function_aliases.value {
-            *document.function_aliases.add() = POD FunctionAlias(it)
+            *document.function_aliases.add() = FunctionAlias(it)
         }
     }
 
@@ -84,7 +106,7 @@ func update(uri String) {
         document.enums.clear()
 
         each JSON in static enums.value {
-            *document.enums.add() = POD Enum(it)
+            *document.enums.add() = Enum(it)
         }
     }
 
@@ -93,7 +115,7 @@ func update(uri String) {
         document.named_expressions.clear()
 
         each JSON in static named_expressions.value {
-            *document.named_expressions.add() = POD NamedExpression(it)
+            *document.named_expressions.add() = NamedExpression(it)
         }
     }
 }
@@ -105,3 +127,28 @@ func getFilenameFromURI(uri String) String {
         return uri.commit()
     }
 }
+
+func publishDiagnostics(document *Document) {
+    if document == null, return
+
+    diagnostics JSON = JSON\array()
+
+    each Diagnostic in document.diagnostics {
+        diagnostics.add(it.toJSON())
+    }
+
+    params JSON = JSON({
+        AsymmetricPair("uri", JSON(document.uri.clone())),
+        AsymmetricPair("version", JSON\number(document.version as double)),
+        AsymmetricPair("diagnostics", diagnostics.commit()),
+    })
+
+    response JSON = JSON({
+        AsymmetricPair("jsonrpc", JSON("2.0")),
+        AsymmetricPair("method", JSON("textDocument/publishDiagnostics")),
+        AsymmetricPair("params", params.commit())
+    })
+
+    lsp\writeMessage(response)
+}
+

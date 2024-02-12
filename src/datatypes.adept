@@ -12,17 +12,15 @@ record Location (uri String, range Range) {
     func toJSON() JSON {
         return JSON({
             AsymmetricPair("uri", JSON(this.uri.clone())),
-            AsymmetricPair("range", JSON({
-                AsymmetricPair("start", JSON({
-                    AsymmetricPair("line", JSON(this.range.start.line)),
-                    AsymmetricPair("character", JSON(this.range.end.character)),
-                })),
-                AsymmetricPair("end", JSON({
-                    AsymmetricPair("line", JSON(this.range.end.line)),
-                    AsymmetricPair("character", JSON(this.range.end.character)),
-                })),
-            }))
+            AsymmetricPair("range", this.range.toJSON()),
         })
+    }
+
+    func clone Location {
+        cloned POD Location
+        cloned.uri = POD this.uri.clone()
+        cloned.range = this.range
+        return cloned
     }
 }
 
@@ -93,6 +91,23 @@ record Range (start, end Position) {
     func contains(position Position) bool {
         return this.start <= position and position <= this.end
     }
+
+    func toJSON JSON {
+        return JSON({
+            AsymmetricPair("start", JSON({
+                AsymmetricPair("line", JSON(this.start.line)),
+                AsymmetricPair("character", JSON(this.end.character)),
+            })),
+            AsymmetricPair("end", JSON({
+                AsymmetricPair("line", JSON(this.end.line)),
+                AsymmetricPair("character", JSON(this.end.character)),
+            })),
+        })
+    }
+}
+
+func Range\empty() Range {
+    return Range(Position(0, 0), Position(0, 0))
 }
 
 record IdentifierToken (content String, range Range) {
@@ -102,7 +117,10 @@ record IdentifierToken (content String, range Range) {
     }
 
     func clone IdentifierToken {
-        return IdentifierToken(this.content.clone(), this.range)
+        cloned POD IdentifierToken
+        cloned.content = POD this.content.clone()
+        cloned.range = this.range
+        return cloned
     }
 }
 
@@ -115,7 +133,11 @@ record Symbol (name, definition String, source Source) {
     }
 
     func clone Symbol {
-        return Symbol(this.name.clone(), this.definition.clone(), this.source.clone())
+        cloned POD Symbol
+        cloned.name = POD this.name.clone()
+        cloned.definition = POD this.definition.clone()
+        cloned.source = POD this.source.clone()
+        return cloned
     }
 }
 
@@ -124,7 +146,11 @@ record Function (symbol Symbol) {
         this.symbol.__constructor__(json)
     }
 
-    func clone Function = Function(this.symbol.clone())
+    func clone Function {
+        cloned POD Function
+        cloned.symbol = POD this.symbol.clone()
+        return cloned
+    }
 }
 
 record Composite (symbol Symbol) {
@@ -132,7 +158,11 @@ record Composite (symbol Symbol) {
         this.symbol.__constructor__(json)
     }
 
-    func clone Composite = Composite(this.symbol.clone())
+    func clone Composite {
+        cloned POD Composite
+        cloned.symbol = POD this.symbol.clone()
+        return cloned
+    }
 }
 
 record Alias (symbol Symbol) {
@@ -140,7 +170,11 @@ record Alias (symbol Symbol) {
         this.symbol.__constructor__(json)
     }
 
-    func clone Alias = Alias(this.symbol.clone())
+    func clone Alias {
+        cloned POD Alias
+        cloned.symbol = POD this.symbol.clone()
+        return cloned
+    }
 }
 
 record FunctionAlias (symbol Symbol) {
@@ -148,7 +182,11 @@ record FunctionAlias (symbol Symbol) {
         this.symbol.__constructor__(json)
     }
 
-    func clone FunctionAlias = FunctionAlias(this.symbol.clone())
+    func clone FunctionAlias {
+        cloned POD FunctionAlias
+        cloned.symbol = POD this.symbol.clone()
+        return cloned
+    }
 }
 
 record Enum (symbol Symbol) {
@@ -156,7 +194,11 @@ record Enum (symbol Symbol) {
         this.symbol.__constructor__(json)
     }
 
-    func clone Enum = Enum(this.symbol.clone())
+    func clone Enum {
+        cloned POD Enum
+        cloned.symbol = POD this.symbol.clone()
+        return cloned
+    }
 }
 
 record NamedExpression (symbol Symbol) {
@@ -164,5 +206,61 @@ record NamedExpression (symbol Symbol) {
         this.symbol.__constructor__(json)
     }
 
-    func clone NamedExpression = NamedExpression(this.symbol.clone())
+    func clone NamedExpression {
+        cloned POD NamedExpression
+        cloned.symbol = POD this.symbol.clone()
+        return cloned
+    }
 }
+
+enum Severity (_INVALID, ERROR, WARNING, INFORMATION, HINT)
+
+record Diagnostic (severity Severity, range Range, message String) {
+    func clone Diagnostic {
+        cloned POD Diagnostic
+        cloned.severity = this.severity
+        cloned.range = this.range
+        cloned.message = POD this.message.clone()
+        return cloned
+    }
+
+    func toJSON JSON {
+        return JSON({
+            AsymmetricPair("severity", JSON\number(this.severity as usize as double)),
+            AsymmetricPair("range", this.range.toJSON()),
+            AsymmetricPair("message", JSON(this.message)),
+        })
+    }
+}
+
+func Diagnostic(json JSON, document *Document) Diagnostic {
+    diagnostic POD Diagnostic
+
+    source Source
+    source.__constructor__(json.field("source"))
+
+    // Get severity
+    if json.field("kind").string().orElse("") == "error" {
+        diagnostic.severity = ::ERROR
+    } elif json.field("kind").string().orElse("") == "warning" {
+        diagnostic.severity = ::WARNING
+    } else {
+        diagnostic.severity = ::ERROR
+    }
+
+    if document.uri == "file://" + source.object {
+        // Get range
+        start <Position> Optional = getTextPosition(source.object, source.index)
+        end <Position> Optional = getTextPosition(source.object, source.index + max(source.stride, 1uz))
+
+        if start.has && end.has {
+            diagnostic.range = Range(start.value, end.value)
+        }
+
+        // Get message
+        diagnostic.message = POD json.field("message").string().orElse("").toOwned()
+    }
+
+    return diagnostic
+}
+

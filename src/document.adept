@@ -1,9 +1,11 @@
 
 import JSON
 import LinearMap
+import "datatypes.adept"
 
 record Document (
     uri String,
+    version usize,
     text_content String,
     ast JSON,
     identifierTokens <IdentifierToken> List,
@@ -13,15 +15,18 @@ record Document (
     function_aliases <FunctionAlias> List,
     enums <Enum> List,
     named_expressions <NamedExpression> List,
+    diagnostics <Diagnostic> List,
 ) {
-    constructor(uri POD String, text_content POD String, ast POD JSON) {
+    constructor(uri POD String, version usize, text_content POD String, ast POD JSON) {
         this.uri = uri
+        this.version = version
         this.text_content = text_content
         this.ast = ast
     }
 
     func __assign__(other POD Document) {
         this.uri = other.uri.toOwned()
+        this.version = other.version
         this.text_content = other.text_content.toOwned()
         this.ast = other.ast.toOwned()
         this.identifierTokens = other.identifierTokens.clone()
@@ -31,23 +36,25 @@ record Document (
         this.function_aliases = other.function_aliases.clone()
         this.enums = other.enums.clone()
         this.named_expressions = other.named_expressions.clone()
+        this.diagnostics = other.diagnostics.clone()
     }
 }
 
 struct Documents (documents <String, Document> LinearMap) {
-    func set(uri String, text_content String) {
+    func set(uri String, text_content String, version usize) {
         document *Document = this.documents.getPointer(uri)
 
         if document == null {
             log("Creating document `%S`...\n", uri)
             element *<String, Document> AsymmetricPair = this.documents.elements.add()
             element.first = uri.clone()
-            element.second = POD Document(uri.toOwned(), text_content.toOwned(), JSON\undefined())
+            element.second = POD Document(uri.toOwned(), version, text_content.toOwned(), JSON\undefined())
             return
         }
 
         log("Updating document `%S`...\n", uri)
         document.text_content = text_content.toOwned()
+        document.version = version
     }
 
     func remove(uri String) {
@@ -67,8 +74,9 @@ func openDocument(message *Message) {
 
     uri String = message.params.field("textDocument").field("uri").string().orElse("")
     text_content String = message.params.field("textDocument").field("text").string().orElse("")
+    version usize = message.params.field("textDocument").field("version").number().orElse(0.0) as usize
 
-    adeptls\documents.set(uri.commit(), text_content.commit())
+    adeptls\documents.set(uri.commit(), text_content.commit(), version)
     update(uri)
 }
 
@@ -76,6 +84,7 @@ func changeDocument(message *Message) {
     log("Processing textDocument\\didChange\n")
 
     uri String = message.params.field("textDocument").field("uri").string().orElse("")
+    version usize = message.params.field("textDocument").field("version").number().orElse(0.0) as usize
     changes <<JSON> List> Optional = message.params.field("contentChanges").array()
 
     if changes.has {
@@ -85,7 +94,7 @@ func changeDocument(message *Message) {
         if last != null {
             log("Has latest change\n")
             text_content String = last.field("text").string().orElse("")
-            adeptls\documents.set(uri, text_content.commit())
+            adeptls\documents.set(uri, text_content.commit(), version)
             update(uri)
         }
     }
@@ -97,3 +106,4 @@ func closeDocument(message *Message) {
     uri String = message.params.field("textDocument").field("uri").string().orElse("")
     adeptls\documents.remove(uri.commit())
 }
+
