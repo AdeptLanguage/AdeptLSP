@@ -3,6 +3,7 @@ import basics
 import "datatypes.adept"
 
 func update(uri String) {
+
     log("Running update...\n")
 
     document *Document = adeptls\documents.getPointer(uri)
@@ -41,7 +42,6 @@ func update(uri String) {
         document.diagnostics.clear()
 
         each JSON in validation.value {
-            log("Creating diagnostic %S\n", toString(it))
             *document.diagnostics.add() = Diagnostic(it, document)
         }
 
