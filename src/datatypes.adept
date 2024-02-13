@@ -33,7 +33,7 @@ record Source (object String, index, stride usize) {
 
     func toLocation() <Location> Optional {
         uri String = "file://" + this.object
-        position <Position> Optional = getTextPosition(this.object, this.index)
+        position <Position> Optional = getTextPositionInFile(this.object, this.index)
 
         if position.has {
             return some(Location(uri.commit(), Range(position.value, position.value)))
@@ -123,7 +123,6 @@ record IdentifierToken (content String, range Range) {
         return cloned
     }
 }
-
 
 record Symbol (name, definition String, source Source) {
     constructor(json JSON) {
@@ -250,12 +249,9 @@ func Diagnostic(json JSON, document *Document) Diagnostic {
 
     if document.uri == "file://" + source.object {
         // Get range
-        start <Position> Optional = getTextPosition(source.object, source.index)
-        end <Position> Optional = getTextPosition(source.object, source.index + max(source.stride, 1uz))
-
-        if start.has && end.has {
-            diagnostic.range = Range(start.value, end.value)
-        }
+        start Position = getTextPositionInContent(document.text_content, source.index)
+        end Position = getTextPositionInContent(document.text_content, source.index + max(source.stride, 1uz))
+        diagnostic.range = Range(start, end)
 
         // Get message
         diagnostic.message = POD json.field("message").string().orElse("").toOwned()

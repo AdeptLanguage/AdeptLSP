@@ -21,7 +21,22 @@ func getTextIndex(text String, position Position) <usize> Optional {
     return none()
 }
 
-func getTextPosition(filename String, index usize) <Position> Optional {
+func getTextPositionInContent(content String, index usize) Position {
+    line, character usize = 0
+
+    for count usize = 0; count < index; count++ {
+        if content[count] == '\n'ub {
+            line++
+            character = 0
+        } else {
+            character++
+        }
+    }
+
+    return Position(line, character)
+}
+
+func getTextPositionInFile(filename String, index usize) <Position> Optional {
     filename_cstr *ubyte = filename.cstr()
     defer delete filename_cstr
 
@@ -32,6 +47,7 @@ func getTextPosition(filename String, index usize) <Position> Optional {
     if f == null {
         return none()
     }
+    defer fclose(f)
 
     buf 1 ubyte
 
