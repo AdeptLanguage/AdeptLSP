@@ -362,6 +362,15 @@ func getDefinitionsFor(document *Document, identifier String) JSON {
         }
     }
 
+    each Enum in document.enums {
+        if it.symbol.name == identifier {
+            location <Location> Optional = it.symbol.source.toLocation()
+
+            if location.has {
+                result.add(location.value.toJSON())
+            }
+        }
+    }
+
     return result.commit()
 }
-
