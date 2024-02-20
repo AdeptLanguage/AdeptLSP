@@ -134,6 +134,22 @@ static void add_alias_definition(json_builder_t *builder, ast_alias_t *alias){
     json_build_object_next(builder);
     json_build_object_key(builder, "definition");
     json_builder_append(builder, "\"alias ");
+
+    if(alias->generics_length > 0){
+        json_builder_append(builder, "<");
+
+        for(length_t i = 0; i < alias->generics_length; i++){
+            if(i != 0){
+                json_builder_append(builder, ", ");
+            }
+
+            json_builder_append(builder, "$");
+            json_builder_append_escaped(builder, alias->generics[i]);
+        }
+
+        json_builder_append(builder, "> ");
+    }
+
     json_builder_append_escaped(builder, alias->name);
     json_builder_append(builder, " = ");
 

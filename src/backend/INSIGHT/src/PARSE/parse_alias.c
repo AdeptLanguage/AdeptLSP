@@ -7,11 +7,13 @@
 #include "LEX/token.h"
 #include "PARSE/parse_alias.h"
 #include "PARSE/parse_ctx.h"
+#include "PARSE/parse_struct.h"
 #include "PARSE/parse_type.h"
 #include "PARSE/parse_util.h"
 #include "TOKEN/token_data.h"
 #include "UTIL/ground.h"
 #include "UTIL/search.h"
+#include "UTIL/string.h"
 #include "UTIL/trait.h"
 
 errorcode_t parse_alias(parse_ctx_t *ctx){
@@ -27,7 +29,13 @@ errorcode_t parse_alias(parse_ctx_t *ctx){
         return FAILURE;
     }
 
-    maybe_null_strong_cstr_t name;
+    maybe_null_strong_cstr_t name = NULL;
+    strong_cstr_t *generics = NULL;
+    length_t generics_length = 0;
+
+    if(parse_generics(ctx, &generics, &generics_length)){
+        goto failure;
+    }
     
     if(ctx->compiler->traits & COMPILER_COLON_COLON && ctx->prename){
         name = ctx->prename;
@@ -51,17 +59,20 @@ errorcode_t parse_alias(parse_ctx_t *ctx){
 
     if(binary_string_search_const(invalid_names, invalid_names_length, name) != -1){
         compiler_panicf(ctx->compiler, source, "Reserved type name '%s' can't be used to create an alias", name);
-        free(name);
-        return FAILURE;
+        goto failure;
     }
 
     if(parse_eat(ctx, TOKEN_ASSIGN, "Expected '=' after alias name")
     || parse_ignore_newlines(ctx, "Expected type after '=' in alias")
     || parse_type(ctx, &type)){
-        free(name);
-        return FAILURE;
+        goto failure;
     }
 
-    ast_add_alias(ast, name, type, TRAIT_NONE, source);
+    ast_add_alias(ast, name, type, generics, generics_length, TRAIT_NONE, source);
     return SUCCESS;
+
+failure:
+    free(name);
+    free_strings(generics, generics_length);
+    return FAILURE;
 }

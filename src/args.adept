@@ -1,15 +1,21 @@
 
 adeptls\infrastructure String
 
+func showHelp(){
+    fprintf(stderr, "usage: adeptls --infrastructure COMPILER_ROOT_FOLDER\n")
+}
+
 func parseArgs(argc int, argv **ubyte) successful {
+    if argc <= 1 {
+        showHelp()
+        return false
+    }
+
     for i usize = 1; i < argc; i++ {
         argument StringView = StringView(argv[i])
 
         if argument == "--help" {
-            log("Help Information ------------------------------------------------------------\n")
-            log("--help                                     Show Help\n")
-            log("--infrastructure <COMPILER_ROOT_FOLDER>    [REQUIRED] Compiler Infrastructure\n")
-            log("-----------------------------------------------------------------------------\n")
+            showHelp()
         } else if argument == "--infrastructure" {
             if i + 1 >= argc {
                 log("Missing <COMPILER_ROOT_FOLDER> value after `--infrastructure` flag\n")
