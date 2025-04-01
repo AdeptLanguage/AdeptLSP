@@ -29,7 +29,7 @@ jobs:
       run:
         working-directory: ${{github.workspace}}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Configure to use MinGW-w64 (Windows)
       if: matrix.os == 'windows-latest'
       shell: bash
@@ -72,19 +72,19 @@ jobs:
         make
         mv adeptls adeptls-ubuntu
     - name: Upload Build Artifact (Windows)
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ matrix.os == 'windows-latest' }}
       with:
         name: adeptls-windows
         path: adeptls-windows.exe
     - name: Upload Build Artifact (macOS)
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ matrix.os == 'macos-latest' }}
       with:
         name: adeptls-macos
         path: adeptls-macos
     - name: Upload Build Artifact (Ubuntu)
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ matrix.os == 'ubuntu-latest' }}
       with:
         name: adeptls-ubuntu
@@ -108,15 +108,15 @@ jobs:
           echo 'releaseName=Nightly' >> $GITHUB_ENV
           echo 'releaseTagName=nightly' >> $GITHUB_ENV
       - name: Download Build Artifact (windows-latest)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: adeptls-windows
       - name: Download Build Artifact (macos-latest)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: adeptls-macos
       - name: Download Build Artifact (ubuntu-latest)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: adeptls-ubuntu
       - name: Get current date
